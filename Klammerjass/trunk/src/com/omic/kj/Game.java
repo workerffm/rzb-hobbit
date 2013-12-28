@@ -4,15 +4,12 @@ import java.util.*;
 import com.omic.kj.shared.domain.*;
 
 public class Game {
-//	private final List<Player> players;
-	//private static int _NEXT_ID_=1;  // unique runtime counter, tmp PK for this object
   private int id;                  // identifier for compare method
 	private int maximumPoints;       // Spielende bei diesen Punkten
 	private int round;               // Runde / Stich Nummer
 	private Date start, end;         // game duration
 //	private List<Card> cards;    // 32 cards with special tags on it
 	private Farbe trumpf;            // Trumpffarbe
-	private Set<Player> player;      // 2 to 4 players per game
 	private Player geber;            // Kartengeber
 	private Player mainplayer;       // Spieler/Gewinner beim "Reizen"
 	private Player firstPlayer;      // Spieler der beim ersten Stich rausgekommen ist
@@ -20,7 +17,9 @@ public class Game {
 	private Player currentPlayer;    // Der Spieler ist grad an der Reihe
 	private Karte roundCard;         // Zuerst ausgespielte Karte in aktueller Runde, diese Farbe muﬂ bedient werden.
 	private Map<Integer,Player> roundwinner;  // Liste der Rundengewinner
-	private CommandListener commandListener;
+	private CommandListener commandListener;  // send player command to this listener!
+	private Set<Player> player;      // 2 to 4 players per game
+	private Set<ComputerPlayer> computerPlayers;  // save extra the auto player
 
 	/*             Spiel        | Runde
 	 * ----------------------------------------
@@ -33,28 +32,37 @@ public class Game {
 	
 	public Game() {
 	  this.player = new HashSet<>();	
+	  this.computerPlayers = new HashSet<>();	
 	}
 	
-	public void joinGame(Player p, GameSettings gs) throws Exception  {
-		if (getPlayers().size()<4) { 
-			getPlayers().add(p);
-			p.setPosition(getPlayers().size());
+	public void joinGame(final Player p, final GameSettings gs) throws Exception  {
+		final int playerCount = player.size(); 
+		if (playerCount < 4) { 
+			p.setPosition(playerCount+1);
+			player.add(p);
 		  /** TODO: Position/L¸cke beachten ! */
-			setLimit (gs.getMaximumPoints());
+			if(gs!=null) {
+			  setLimit (gs.getMaximumPoints());
+			}
+			setLimit (Math.min(300, maximumPoints));
 		}
 		else {
 			throw new Exception("Too many players for this game.");
 		} 
 	}
 
-	private void setLimit(int maximumPoints) {
-		// TODO Auto-generated method stub
-		
+	public void joinGame(final ComputerPlayer computerPlayer) throws Exception {
+		joinGame(computerPlayer.getPlayer(),null);
+		computerPlayers.add(computerPlayer);
 	}
 
-	public boolean hasPlayer(int id) {
+	private void setLimit(int maximumPoints) {
+		this.maximumPoints = maximumPoints;
+	}
+
+	public boolean hasPlayer(int playerId) {
 		for (Player p:player){
-			if(p.getId()==id)
+			if(p.getId()==playerId)
 				return true;
 		}
 		return false;
@@ -73,25 +81,32 @@ public class Game {
 			commandListener.toPlayer(cmd);
 		}
 		
-//		game.setStart(new Date());
-//		loadCards();
-//		selectGeber();
-//		geben();
-//		GameLogger.printGame(game);
-//		startRounds();
+//	game.setStart(new Date());
+//	loadCards();
+//	selectGeber();
+//	geben();
+//	GameLogger.printGame(game);
+//	startRounds();
+
 	}
+	
+	public void stopGame() {
+	}
+		
 
 	public Set<Player> getPlayers() {
 		return player;
 	}
 
 	public void onPlayerResponse(PlayerResponse response) {
-		// TODO Auto-generated method stub
+		// TODO add queue and thread
 		
 	}
 
 	public void setCommandListener(CommandListener commandListener) {
 		this.commandListener = commandListener;
 	}
+
+
 
 }

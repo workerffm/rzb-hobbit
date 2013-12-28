@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
-import com.omic.kj.local.ComputerPlayer;
-import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.*;
 
 /**
@@ -14,52 +12,34 @@ import com.omic.kj.shared.domain.*;
 public class GameController implements ServerInterface, PlayerResponseListener, CommandListener {
 	
 	private final Logger log = Logger.getLogger("Game");
-	private final Set<Player> activePlayer;
+	private final Set<Player> activePlayers;
 	private final Set<Game> activeGames;
-	private CommandListener commandListener;
+	private final Set<CommandListener> commandListeners;
+	private final Object controllerLock = new Object();
+	
 	private int nextPlayerId = 1;
 	private int playerCommandId = 1;
 	
 	public GameController() {
-		this.activePlayer = new HashSet<>();	
-		this.activeGames = new HashSet<>();	
+		this.activePlayers = new HashSet<>();	
+		this.activeGames = new HashSet<>();
+		this.commandListeners = new HashSet<>();
 	} 
 	
 	/**
 	 * Notification interface to client
 	 */
 	public void addCommandListener(CommandListener commandListener){
-		this.commandListener = commandListener;
+		this.commandListeners.add(commandListener);
 	}
 
-	/**
-	 * Callback from client side, push into queue and forward to active game. 
-	 */
-	@Override
-	public void onMessage(final PlayerResponse response) {
-  	log.info("Player response: "+response);
-	  Game g = findGame(response.getPlayerId());
-	  if(g==null) {
-	  	log.info("No game found for reponse +"+response);
-	  }
-	  g.onPlayerResponse(response);
-	}
-
-	public void toPlayer(final PlayerCommand command) {
-	  command.setPlayerCommandId(playerCommandId);
-	  playerCommandId++;
-  	log.info("Player command: "+command);
-		this.commandListener.toPlayer(command);	
-	}
-	
-	
 	@Override
 	public User login(String us, String pw) throws Exception {
 		if (StringUtils.isBlank(pw)) throw new Exception("Invalid user");
 		if (StringUtils.isBlank(us)) throw new Exception("Invalid user");
 		
-		synchronized(this.activePlayer) {
-			for(Player cp:activePlayer) {
+		synchronized(this.controllerLock) {
+			for(Player cp:activePlayers) {
 			  if(cp.getUsername().equals(us)) throw new Exception("Already logged on.");  	
 			}
 		}
@@ -67,16 +47,31 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
   	return p;
 	}
 
+	@Override
+	public void logout(String us) throws Exception {
+		if (StringUtils.isBlank(us)) throw new Exception("Invalid user");
+		synchronized(this.controllerLock) {
+			for(Player cp:activePlayers) {
+			  if(cp.getUsername().equals(us)) {
+			  	Game g = findGame(cp.getId());
+			  	stopGame(g);
+			  	activePlayers.remove(cp);
+			  	activeGames.remove(g);
+			  }  	
+			}
+		}
+	}
+
 	private Player createNewPlayer(String username) {
 		final Player p = new Player();
 		p.setUsername(username);
 		p.setPosition(1);
 		p.setPunkte(0);
-		p.setSpielbereit(Boolean.TRUE);
+		p.setSpielbereit(true);
 		p.setTeamId(1);
-		synchronized (this.activePlayer) {
+		synchronized (this.controllerLock) {
 			p.setId(nextPlayerId);
-			this.activePlayer.add(p);
+			this.activePlayers.add(p);
 			nextPlayerId++;
 		}
 		return p;
@@ -98,24 +93,83 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		
 		// Spiel gegen PC
 		if(settings.isOption_PlayWithPC()){
-			Game newGame = new Game();
+			p.setSpielbereit(true);
+			final Game newGame = new Game();
 			newGame.setCommandListener(this);
 			newGame.joinGame(p,settings);
-			p.setSpielbereit(true);
+			
 			for (int i=0; i < settings.getComputerCount();i++) {
-	  	  Player pl = createNewPlayer("Computer "+(1+i));
-	  	  ComputerPlayer cp = new ComputerPlayer(pl);
-	  	  cp.getPlayer().setSpielbereit(true);
-				newGame.joinGame(cp.getPlayer(),settings);
+	  	  final Player coPlayer = createNewPlayer("Computer "+(1+i)+"-"+p.getId());
+	  	  coPlayer.setSpielbereit(true);
+				
+	  	  final ComputerPlayer cp = new ComputerPlayer(coPlayer);
+	  	  cp.setPlayerResponseListener(this); // send response
+	  	  addCommandListener(cp); // get commands
+				newGame.joinGame(cp);
 			}
-			activeGames.add(newGame);
-			newGame.startGame();
+			startGame(newGame);
+		}
+		else {
+			// TODO: join existing game, wait for other player
 		}
 	}
+
+	private void startGame(final Game game) throws Exception {
+		synchronized(this.controllerLock) {
+		  activeGames.add(game);
+		}
+		game.startGame();
+		log.info("Game started: "+game);
+	}
+
+	private void stopGame(final Game game) {
+		if(game==null) return;
+		game.stopGame();
+		// TODO Send message to all player
+		synchronized(this.controllerLock) {
+		  activeGames.remove(game);
+		}
+		log.info("Game stopped: "+game);
+	}
+
+	// --------------------------------------------------------------------
+	// -- player-server communication -------------------------------------
+	// --------------------------------------------------------------------
+	
+	/**
+	 * Callback from client side, push into queue and forward to active game. 
+	 */
+	@Override
+	public void onMessage(final PlayerResponse response) {
+  	log.info("Player response: "+response);
+	  Game g = findGame(response.getPlayerId());
+	  if(g==null) {
+	  	log.info("Response ignored, no game found for reponse: "+response);
+	  }
+	  else {
+	    g.onPlayerResponse(response);
+	  }
+	}
+
+	/**
+	 * Forward message to all player listener
+	 */
+	public void toPlayer(final PlayerCommand command) {
+	  command.setPlayerCommandId(playerCommandId);
+	  playerCommandId++;
+  	log.info("Player command: "+command);
+  	for(CommandListener listener:commandListeners) {
+		  listener.toPlayer(command);
+  	}
+	}
+	
+	// --------------------------------------------------------------------
+	// -- helper ----------------------------------------------------------
+	// --------------------------------------------------------------------
 	
 	private Player findPlayer(User user) throws Exception {
-		synchronized(this.activePlayer) {
-			for(Player cp:activePlayer) {
+		synchronized(this.controllerLock) {
+			for(Player cp:activePlayers) {
 			  if(cp.getUsername().equals(user.getUsername())) return cp;  	
 			}
 		}
@@ -123,7 +177,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	}
 
 	private Game findGame(int userId) {
-		synchronized (this.activeGames) {
+		synchronized (this.controllerLock) {
 		  for (Game g:this.activeGames) {
 		  	if(g.hasPlayer(userId))
 		  			return g;
@@ -131,6 +185,5 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		}
 		return null;
 	}
-
 
 }

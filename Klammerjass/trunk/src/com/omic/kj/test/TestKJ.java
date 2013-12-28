@@ -17,7 +17,7 @@ public class TestKJ {
 		User u= conn.login("markus","xxx", new PlayerCommandListener() {
 			@Override
 			public void onMessage(PlayerCommand c) {
-			  System.out.println(""+c);	
+			  System.out.println("TEST PLAYER: "+c);	
 			}
 		});
     conn.startGame(u, new GameSettings(true,1,300));
