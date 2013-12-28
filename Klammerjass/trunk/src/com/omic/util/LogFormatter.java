@@ -75,6 +75,10 @@ public class LogFormatter extends Formatter {
 		sb.append(record.getLevel().getLocalizedName());
 		sb.append("] ");
 		
+		sb.append(" [");
+		sb.append(record.getLoggerName());
+		sb.append("] ");
+
 		if (!isInfo) {
 			if (record.getSourceClassName() != null) {
 				String className = record.getSourceClassName();

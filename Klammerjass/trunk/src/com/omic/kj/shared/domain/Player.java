@@ -11,6 +11,8 @@ public class Player extends User {
 	private int teamId;
 	/** Position on table */
 	private int position;
+	/** is computer player */
+	private boolean computer;
 
 	
 	public Player() {
@@ -66,6 +68,14 @@ public class Player extends User {
 
 	public void setSpielbereit(boolean spielbereit) {
 		this.spielbereit = spielbereit;
+	}
+
+	public boolean isComputer() {
+		return computer;
+	}
+
+	public void setComputer(boolean computer) {
+		this.computer = computer;
 	}
 
 	//	public void addPoints (int p) {

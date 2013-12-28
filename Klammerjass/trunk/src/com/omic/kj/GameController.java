@@ -12,12 +12,14 @@ import com.omic.kj.shared.domain.*;
 public class GameController implements ServerInterface, PlayerResponseListener, CommandListener {
 	
 	private final Logger log = Logger.getLogger("Game");
+	
 	private final Set<Player> activePlayers;
 	private final Set<Game> activeGames;
 	private final Set<CommandListener> commandListeners;
 	private final Object controllerLock = new Object();
 	
 	private int nextPlayerId = 1;
+	private int nextGameId = 1;
 	private int playerCommandId = 1;
 	
 	public GameController() {
@@ -94,6 +96,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		// Spiel gegen PC
 		if(settings.isOption_PlayWithPC()){
 			p.setSpielbereit(true);
+  	  p.setComputer(false);
 			final Game newGame = new Game();
 			newGame.setCommandListener(this);
 			newGame.joinGame(p,settings);
@@ -101,6 +104,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 			for (int i=0; i < settings.getComputerCount();i++) {
 	  	  final Player coPlayer = createNewPlayer("Computer "+(1+i)+"-"+p.getId());
 	  	  coPlayer.setSpielbereit(true);
+	  	  coPlayer.setComputer(true);
 				
 	  	  final ComputerPlayer cp = new ComputerPlayer(coPlayer);
 	  	  cp.setPlayerResponseListener(this); // send response
@@ -116,6 +120,8 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 
 	private void startGame(final Game game) throws Exception {
 		synchronized(this.controllerLock) {
+			game.setId(nextGameId);
+			nextGameId++;
 		  activeGames.add(game);
 		}
 		game.startGame();
@@ -157,8 +163,8 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	public void toPlayer(final PlayerCommand command) {
 	  command.setPlayerCommandId(playerCommandId);
 	  playerCommandId++;
-  	log.info("Player command: "+command);
   	for(CommandListener listener:commandListeners) {
+  		log.fine("CMD "+command.getPlayerCommandId()+" --> "+listener);
 		  listener.toPlayer(command);
   	}
 	}
