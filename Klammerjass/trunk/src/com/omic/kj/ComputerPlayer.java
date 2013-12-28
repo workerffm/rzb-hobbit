@@ -12,13 +12,12 @@ import com.omic.kj.shared.domain.PlayerCommand;
  */
 public class ComputerPlayer implements CommandListener  {
 
+	private final Logger log = Logger.getLogger("ComputerPlayer");
 	private final Player me;
-	private final Logger log;
 	private PlayerResponseListener listener;
 
 	public ComputerPlayer(Player player) {
 		this.me = player;
-		this.log = Logger.getLogger("Player");
 	}
 
 	public Player getPlayer() {
@@ -31,7 +30,9 @@ public class ComputerPlayer implements CommandListener  {
 
 	@Override
 	public void toPlayer(PlayerCommand command) {
-		
+		if(command.getPlayerId()==me.getId()){
+		 log.info(command+"");
+		}
 	}
 
 //	@Override
