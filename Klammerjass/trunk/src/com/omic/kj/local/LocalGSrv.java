@@ -9,16 +9,22 @@ import com.omic.kj.shared.domain.*;
 public class LocalGSrv implements ServerInterface {
 
 	private GameController gamecontroller;
-	//private PlayerResponseListener responseListener;
 
 	public LocalGSrv() {
 		this.gamecontroller = new GameController();
 	}
-
+	
+	@Override
 	public User login(String us, String pw) throws Exception {
 		return gamecontroller.login(us, pw);
 	}
 
+	@Override
+	public void logout(String us) throws Exception {
+		gamecontroller.logout(us);
+	}
+	
+	@Override
 	public void startGame(User user, GameSettings settings) throws Exception {
 		gamecontroller.startGame(user, settings);
 	}

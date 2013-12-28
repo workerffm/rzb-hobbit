@@ -13,8 +13,9 @@ import com.omic.kj.shared.domain.*;
  */
 public final class LocalGameConnector implements ClientInterface {
 	
+	private static LocalGameConnector connector;
+	
 	private final Logger log = Logger.getLogger("Game");
-	private static LocalGameConnector connector; 
 	private final LocalGSrv delegate;
 	private final Map<User, PlayerCommandListener> playerlistener;
 

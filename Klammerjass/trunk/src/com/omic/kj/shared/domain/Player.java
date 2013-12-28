@@ -49,7 +49,7 @@ public class Player extends User {
   // -------------------------------------------------------------------
 	
 	public String toString() {
-		return "[posi="+position+", team="+teamId+", readyToPlay="+getSpielbereit()+", points="+getPunkte()+"]";
+		return "[id="+getId()+", uername="+getUsername()+", posi="+position+", team="+teamId+", readyToPlay="+getSpielbereit()+", points="+getPunkte()+"]";
 	}
 
 	public boolean isInMyTeam (Player p) {

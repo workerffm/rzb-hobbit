@@ -8,6 +8,8 @@ import com.omic.kj.shared.domain.*;
 public interface ServerInterface {
 	
 	User login (String u, String p) throws Exception;
+
+	void logout (String u) throws Exception;
 	
 	// play against PC
 	void startGame (User user, GameSettings settings) throws Exception;

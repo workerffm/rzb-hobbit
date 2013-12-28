@@ -1,7 +1,6 @@
-package com.omic.kj.local;
+package com.omic.kj;
 
 import java.util.logging.Logger;
-import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.Player;
 import com.omic.kj.shared.domain.PlayerCommand;
 
@@ -11,10 +10,11 @@ import com.omic.kj.shared.domain.PlayerCommand;
  * @author cb3arbe
  *
  */
-public class ComputerPlayer implements PlayerCommandListener  {
+public class ComputerPlayer implements CommandListener  {
 
 	private final Player me;
 	private final Logger log;
+	private PlayerResponseListener listener;
 
 	public ComputerPlayer(Player player) {
 		this.me = player;
@@ -25,13 +25,13 @@ public class ComputerPlayer implements PlayerCommandListener  {
 		return me;
 	}
 
-	public PlayerCommandListener getCommandInterface() {
-		return this;
+	public void setPlayerResponseListener(PlayerResponseListener listener) {
+		this.listener = listener;
 	}
 
 	@Override
-	public void onMessage(PlayerCommand pcmd) {
-		// TODO Auto-generated method stub
+	public void toPlayer(PlayerCommand command) {
+		
 	}
 
 //	@Override
