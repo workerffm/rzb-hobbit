@@ -105,6 +105,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	  	  final Player coPlayer = createNewPlayer("Computer "+(1+i)+"-"+p.getId());
 	  	  coPlayer.setSpielbereit(true);
 	  	  coPlayer.setComputer(true);
+	  	  coPlayer.setPosition(2+i);
 				
 	  	  final ComputerPlayer cp = new ComputerPlayer(coPlayer);
 	  	  cp.setPlayerResponseListener(this); // send response

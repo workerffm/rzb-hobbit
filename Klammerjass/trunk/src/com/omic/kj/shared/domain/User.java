@@ -2,14 +2,26 @@ package com.omic.kj.shared.domain;
 
 public class User
 {
-	private int id;       // unique runtime counter, tmp PK for player object
-	private String username;      // reference to Login User object
+	/** unique runtime counter, tmp PK for player object, used for routing! */
+	private int id;
+	/** reference to Login User object */
+	private String username;      
+	/** user belongs to this team/table, used for routing! */
+	private int teamId;
 
 	public User() {
 		id=0;
-		setUsername(null);
+		teamId=0;
 	}
-	
+
+	public int getTeamId() {
+		return teamId;
+	}
+
+	public void setTeamId(int teamId) {
+		this.teamId = teamId;
+	}
+
 	public int getId() {
 		return id;
 	}
