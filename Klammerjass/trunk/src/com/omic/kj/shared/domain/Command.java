@@ -2,12 +2,12 @@ package com.omic.kj.shared.domain;
 
 /** Anweisung an Spieler */
 public enum Command {
-	info,
-	play,
+	playerinfo,
+	roundinfo,
 	say, 
-	frageTrumpf,
-	frageTrumpffarbe,
+	frageOriginal,
 	frageKleines,
+	frageTrumpffarbe,
 	frageBesser,
 	zeigeFuenfzig,
 	zeigeTerz;

@@ -11,6 +11,7 @@ public class PlayerResponse {
 	private int playerId;
   private Response response;
   private Farbe farbe;
+  private Karte karte;
   
 	public int getPlayerId() {
 		return playerId;
@@ -34,5 +35,11 @@ public class PlayerResponse {
 	@Override
 	public String toString() {
 		return "PlayerResponse [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", response=" + response + ", farbe=" + farbe + "]";
+	}
+	public Karte getKarte() {
+		return karte;
+	}
+	public void setKarte(Karte karte) {
+		this.karte = karte;
 	}
 }
