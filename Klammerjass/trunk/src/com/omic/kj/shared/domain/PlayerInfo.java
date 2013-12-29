@@ -8,12 +8,13 @@ import java.util.Set;
  */
 public class PlayerInfo {
 	private int playerId;
-	private String gameName, playerName, teamName;
-	private int position, runde, punkte;
-	private Boolean playerActive;
-	private Farbe trumpf;
+	private String gameName, playerName;
+	private int position, runde, punkte, spieler;
+	private boolean aktiv;
+	private boolean trumpfzeigen; // soll spieler die originalkarte offen zeigen?
 	private String geber, aufspieler;
 	private Set<Handkarte> karten;
+	private Farbe trumpf;
 	
 	public int getPlayerId() {
 		return playerId;
@@ -33,12 +34,7 @@ public class PlayerInfo {
 	public void setPlayerName(String playerName) {
 		this.playerName = playerName;
 	}
-	public String getTeamName() {
-		return teamName;
-	}
-	public void setTeamName(String teamName) {
-		this.teamName = teamName;
-	}
+
 	public int getPosition() {
 		return position;
 	}
@@ -57,11 +53,24 @@ public class PlayerInfo {
 	public void setPunkte(int punkte) {
 		this.punkte = punkte;
 	}
-	public Boolean getPlayerActive() {
-		return playerActive;
+
+	public int getSpieler() {
+		return spieler;
 	}
-	public void setPlayerActive(Boolean playerActive) {
-		this.playerActive = playerActive;
+	public void setSpieler(int spieler) {
+		this.spieler = spieler;
+	}
+	public boolean isAktiv() {
+		return aktiv;
+	}
+	public void setAktiv(boolean aktiv) {
+		this.aktiv = aktiv;
+	}
+	public boolean isTrumpfzeigen() {
+		return trumpfzeigen;
+	}
+	public void setTrumpfzeigen(boolean trumpfzeigen) {
+		this.trumpfzeigen = trumpfzeigen;
 	}
 	public Farbe getTrumpf() {
 		return trumpf;

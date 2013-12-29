@@ -2,6 +2,7 @@ package com.omic.kj.shared.domain;
 
 /** Meldung vom Spieler */
 public enum Response {
+	play,
   ja, nein, waehleFarbe,  
   tauscheSieben,
   meldeFuenfzig,

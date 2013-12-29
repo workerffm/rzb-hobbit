@@ -7,13 +7,14 @@ import java.util.Arrays;
 public class PlayerCommand {
 	private int playerCommandId;
 	private int playerId;
-	private int teamId;
+	private int gameId;
 	private Command command;
   private Response[] allowedResponse;
   private String message;
   /** Karte 1 vom Stapel, Frage ob diese Farbe gespielt werden soll */
   private Farbe ersteKarte;
-  private PlayerInfo info; 
+  private PlayerInfo playerInfo; 
+  private RoundInfo roundInfo; 
   
 	public int getPlayerId() {
 		return playerId;
@@ -52,21 +53,21 @@ public class PlayerCommand {
 		this.ersteKarte = ersteKarte;
 	}
 	public PlayerInfo getInfo() {
-		return info;
+		return playerInfo;
 	}
 	public void setInfo(PlayerInfo info) {
-		this.info = info;
-	}
-	public int getTeamId() {
-		return teamId;
-	}
-	public void setTeamId(int teamId) {
-		this.teamId = teamId;
+		this.playerInfo = info;
 	}
 	@Override
 	public String toString() {
-		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", teamId=" + teamId + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
-				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", info=" + info + "]";
+		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", gameId=" + getGameId() + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
+				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", info=" + playerInfo + "]";
+	}
+	public int getGameId() {
+		return gameId;
+	}
+	public void setGameId(int gameId) {
+		this.gameId = gameId;
 	}
 	
 }

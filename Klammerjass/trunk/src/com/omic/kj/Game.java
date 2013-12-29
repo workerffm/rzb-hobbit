@@ -8,7 +8,7 @@ final class Game {
 	
 	private final Logger log = Logger.getLogger("Game");
 
-	private int id; // identifier for compare method
+	private int gameId; // identifier for compare method
 	private String gameName;
 	private int maximumPoints; // Spielende bei diesen Punkten
 	private int round; // Runde / Stich Nummer
@@ -155,8 +155,8 @@ final class Game {
 	private void sendPlayerInfo(final Player p) {
 		final PlayerCommand command = new PlayerCommand();
 		command.setPlayerId(p.getId());
-		command.setTeamId(p.getTeamId());
-		command.setCommand(Command.info);
+		command.setGameId(gameId);
+		command.setCommand(Command.playerinfo);
 		command.setInfo(buildPlayerInfo(p));
 		this.commandListener.toPlayer(command);
 	}
@@ -167,13 +167,12 @@ final class Game {
 		i.setGameName(gameName);
 		i.setGeber(geber.getUsername());
 		i.setKarten(getCardsOnHand(p));
-		i.setPlayerActive(false);
+		i.setAktiv(false);
 		i.setPlayerId(p.getId());
 		i.setPlayerName(p.getUsername());
 		i.setPosition(p.getPosition());
 		i.setPunkte(p.getPunkte());
 		i.setRunde(round);
-		i.setTeamName(teamName);
 		i.setTrumpf(trumpf);
 		return i;
 	}
@@ -252,7 +251,7 @@ final class Game {
 	}
 
 	public void setId(int id) {
-		this.id = id;
+		this.gameId = id;
 	}
 
 }

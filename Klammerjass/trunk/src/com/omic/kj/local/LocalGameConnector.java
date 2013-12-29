@@ -65,17 +65,17 @@ public final class LocalGameConnector implements ClientInterface {
 
 	/**
 	 * Forward command to client listener
-	 * TODO: add queue and thread
+	 * TODO: add queue and thread AND add game channel on server side
 	 */
 	private final class PlayerCommandDispatcher implements CommandListener {
 		@Override
 		public void toPlayer(PlayerCommand command) {
 			synchronized (LocalGameConnector.this.playerlistener) {
 				for (User u : playerlistener.keySet()) {
-					if (u.getId() == command.getPlayerId() || u.getTeamId() == command.getTeamId()) {
+					//if (u.getId() == command.getPlayerId() || u.getGameId() == command.getGameId()) {
 						LocalGameConnector.this.playerlistener.get(u).onMessage(command);
 						break;
-					}
+					//}
 				}
 			}
 		}
