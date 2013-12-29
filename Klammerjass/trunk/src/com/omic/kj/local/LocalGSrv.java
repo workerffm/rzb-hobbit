@@ -33,6 +33,7 @@ public class LocalGSrv implements ServerInterface {
 		gamecontroller.onMessage(response);
 	}
 
+	/** TODO should add filter per player/team or game */
 	public void addCommandListener(CommandListener commandListener) {
 		gamecontroller.addCommandListener(commandListener);
 	}

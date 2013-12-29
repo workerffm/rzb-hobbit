@@ -7,6 +7,7 @@ import java.util.Arrays;
 public class PlayerCommand {
 	private int playerCommandId;
 	private int playerId;
+	private int teamId;
 	private Command command;
   private Response[] allowedResponse;
   private String message;
@@ -56,9 +57,16 @@ public class PlayerCommand {
 	public void setInfo(PlayerInfo info) {
 		this.info = info;
 	}
+	public int getTeamId() {
+		return teamId;
+	}
+	public void setTeamId(int teamId) {
+		this.teamId = teamId;
+	}
 	@Override
 	public String toString() {
-		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse) + ", message=" + message
-				+ ", ersteKarte=" + ersteKarte + ", info=" + info + "]";
+		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", teamId=" + teamId + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
+				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", info=" + info + "]";
 	}
+	
 }

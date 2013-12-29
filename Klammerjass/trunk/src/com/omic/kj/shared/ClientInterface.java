@@ -7,12 +7,14 @@ import com.omic.kj.shared.domain.*;
  */
 public interface ClientInterface {
 	
-	User login (String u, String p, PlayerCommandListener listener) throws Exception;
+	User login (String u, String p) throws Exception;
+	void addPlayerCommandListener(User user, PlayerCommandListener listener);
 	
 	void playerResponse (PlayerResponse response);
 
 	// play against PC
 	void startGame (User user, GameSettings settings) throws Exception;
+
 
 	
 	// play online

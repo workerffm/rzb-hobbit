@@ -17,11 +17,12 @@ public class TestKJ {
 		
 		log = Logger.getLogger("TestPlayer");
 		
-		LocalGameConnector conn = LocalGameConnector.getConnector();
-		User u= conn.login("markus","xxx", new PlayerCommandListener() {
+		final LocalGameConnector conn = LocalGameConnector.getConnector();
+		final User u= conn.login("markus","xxx");
+		conn.addPlayerCommandListener(u, new PlayerCommandListener() {
 			@Override
 			public void onMessage(PlayerCommand command) {
-			  log.info(command+"");	
+			  log.info("I'm user "+u.getId()+" "+command+"");	
 			}
 		});
     conn.startGame(u, new GameSettings(true,3,300));

@@ -7,8 +7,6 @@ public class Player extends User {
 	private boolean spielbereit;
 	/** current points of player */
 	private int punkte; 
-	/** user belongs to this team/table */
-	private int teamId;
 	/** Position on table */
 	private int position;
 	/** is computer player */
@@ -18,17 +16,9 @@ public class Player extends User {
 	public Player() {
 		super();
 		setSpielbereit(false);
-		teamId=0;
 		position=0;
 	}
 
-	public int getTeamId() {
-		return teamId;
-	}
-
-	public void setTeamId(int teamId) {
-		this.teamId = teamId;
-	}
 
 	public int getPosition() {
 		return position;
@@ -51,11 +41,11 @@ public class Player extends User {
   // -------------------------------------------------------------------
 	
 	public String toString() {
-		return "[id="+getId()+", uername="+getUsername()+", posi="+position+", team="+teamId+", readyToPlay="+getSpielbereit()+", points="+getPunkte()+"]";
+		return "[id="+getId()+", uername="+getUsername()+", posi="+position+", team="+getTeamId()+", readyToPlay="+getSpielbereit()+", points="+getPunkte()+"]";
 	}
 
 	public boolean isInMyTeam (Player p) {
-		return p.getTeamId()==teamId && p.getId()!=getId();
+		return p.getTeamId()==getTeamId() && p.getId()!=getId();
 	}
 
 	public boolean isSpielbereit() {

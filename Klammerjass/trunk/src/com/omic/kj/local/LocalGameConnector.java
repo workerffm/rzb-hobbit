@@ -12,40 +12,47 @@ import com.omic.kj.shared.domain.*;
  * Alternative: RMI Client connection to "ServerInterface" (delegate)
  */
 public final class LocalGameConnector implements ClientInterface {
-	
-	private static LocalGameConnector connector;
-	
+
 	private final Logger log = Logger.getLogger("Game");
-	private final LocalGSrv delegate;
+	
+	/** Connector is singleton */
+	private static LocalGameConnector connector;
+
+	private final LocalGSrv server;
 	private final Map<User, PlayerCommandListener> playerlistener;
 
 	public synchronized static LocalGameConnector getConnector() throws Exception {
-		if (connector==null)
+		if (connector == null) {
 			connector = new LocalGameConnector();
+		}
 		return connector;
 	}
 
 	private LocalGameConnector() throws Exception {
 		// Create the simple local implemenation
 		//
-		this.delegate = new LocalGSrv();
+		this.server = new LocalGSrv();
 		this.playerlistener = new HashMap<>();
-		this.delegate.addCommandListener(new PlayerCommandDispatcher());
+		this.server.addCommandListener(new PlayerCommandDispatcher());
 
 		log.info("LocalGameConnector initialized.");
 	}
 
 	private void start() throws InterruptedException {
-		this.delegate.wait();
+		this.server.wait();
 	}
 
 	@Override
-	public User login(String u, String p, PlayerCommandListener listener) throws Exception {
-		final User user = this.delegate.login(u, p);
-		if(user!=null) {
-			playerlistener.put(user,listener);
-		}
+	public User login(String u, String p) throws Exception {
+		final User user = this.server.login(u, p);
 		return user;
+	}
+
+	@Override
+	public void addPlayerCommandListener(User user, PlayerCommandListener listener) {
+		if (user != null) {
+			playerlistener.put(user, listener);
+		}
 	}
 
 	/**
@@ -53,7 +60,7 @@ public final class LocalGameConnector implements ClientInterface {
 	 */
 	@Override
 	public void startGame(User user, GameSettings settings) throws Exception {
-		this.delegate.startGame(user, settings);
+		this.server.startGame(user, settings);
 	}
 
 	/**
@@ -64,8 +71,8 @@ public final class LocalGameConnector implements ClientInterface {
 		@Override
 		public void toPlayer(PlayerCommand command) {
 			synchronized (LocalGameConnector.this.playerlistener) {
-				for(User u:playerlistener.keySet()) {
-					if(u.getId() == command.getPlayerId()) {
+				for (User u : playerlistener.keySet()) {
+					if (u.getId() == command.getPlayerId() || u.getTeamId() == command.getTeamId()) {
 						LocalGameConnector.this.playerlistener.get(u).onMessage(command);
 						break;
 					}
@@ -79,7 +86,7 @@ public final class LocalGameConnector implements ClientInterface {
 	 */
 	@Override
 	public void playerResponse(PlayerResponse response) {
-    this.delegate.forwardPlayerResponse(response);
+		this.server.forwardPlayerResponse(response);
 	}
 
 }

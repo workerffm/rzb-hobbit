@@ -154,8 +154,9 @@ final class Game {
 
 	private void sendPlayerInfo(final Player p) {
 		final PlayerCommand command = new PlayerCommand();
-		command.setCommand(Command.info);
 		command.setPlayerId(p.getId());
+		command.setTeamId(p.getTeamId());
+		command.setCommand(Command.info);
 		command.setInfo(buildPlayerInfo(p));
 		this.commandListener.toPlayer(command);
 	}
