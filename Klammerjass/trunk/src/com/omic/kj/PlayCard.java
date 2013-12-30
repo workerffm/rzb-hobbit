@@ -12,7 +12,6 @@ final class PlayCard
 	private int round;         // trick (engl.) Stich
 	private int order;         // Reihenfolge innerhalb vom Stich
 	private Player owner;
-  private boolean original;  // Vorschlag
   
   
   public PlayCard(Karte c) {
@@ -39,16 +38,9 @@ final class PlayCard
 	 * @return Karte is unassigned and has no owner.
 	 */
 	public boolean isFree() {
-		return owner==null && !original;
-	}
-	
-	public void setOriginal(boolean b) {
-		original = b;
+		return owner==null;
 	}
 
-	public boolean isOriginal() {
-		return original;
-	}
 
 	public String toString() {
 		return "["
@@ -56,7 +48,7 @@ final class PlayCard
 		  +order+"|"
 		  +padr((owner!=null?owner.getUsername():null),15)+"|"
 		  +(isFree()?"free":"used")+"|"
-		  +padr((original?"orig.":""),5)+"|"
+		  //+padr((original?"orig.":""),5)+"|"
 		  //+(original?"trumpf":"")+"|"
 		  +karte.toString()
 		 +"]";
