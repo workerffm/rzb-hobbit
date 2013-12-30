@@ -143,7 +143,7 @@ final class Game {
 			// -----------------------------------------------------------
 			case G2: {
 				Player p = getPlayerFromGeber(+1);
-				sendPlayerCommand(p, Command.frageOriginal);
+				sendPlayerCommand(p, Command.frageOriginal,new Response[]{Response.ja,Response.nein});
 				this.state = GameState.G3;
 				//
 				break;
@@ -224,10 +224,6 @@ final class Game {
 		//	startRounds();
 	}
 
-	private void sendPlayerCommand(Player p, Command frageoriginal) {
-		// TODO Auto-generated method stub
-
-	}
 
 	/**
 	 * n-ter Spieler im Uhrzeigersinn vom Geber ausgehend
@@ -305,12 +301,22 @@ final class Game {
 	//	}
 
 	private void sendPlayerInfo(final Player p) {
-		final PlayerCommand command = new PlayerCommand();
-		command.setPlayerId(p.getId());
-		command.setGameId(gameId);
-		command.setCommand(Command.playerinfo);
-		command.setInfo(buildPlayerInfo(p));
-		this.commandListener.toPlayer(command);
+		final PlayerCommand pc = new PlayerCommand();
+		pc.setPlayerId(p.getId());
+		pc.setGameId(gameId);
+		pc.setCommand(Command.playerinfo);
+		pc.setInfo(buildPlayerInfo(p));
+		this.commandListener.toPlayer(pc);
+	}
+
+	private void sendPlayerCommand(Player p, Command command, Response[] allowedResponse) {
+		final PlayerCommand pc = new PlayerCommand();
+		pc.setPlayerId(p.getId());
+		pc.setGameId(gameId);
+		pc.setCommand(command);
+		pc.setAllowedResponse(allowedResponse);
+		pc.setErsteKarte(original.getFarbe());
+		this.commandListener.toPlayer(pc);
 	}
 
 	private PlayerInfo buildPlayerInfo(final Player p) {
