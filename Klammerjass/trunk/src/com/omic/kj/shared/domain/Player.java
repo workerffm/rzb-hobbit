@@ -6,7 +6,7 @@ public class Player extends User {
 	/** User notified that he is ready to play */
 	private boolean spielbereit;
 	/** current points of player */
-	private int punkte; 
+	private int points; 
 	/** Position on table */
 	private int position;
 	/** is computer player */
@@ -28,12 +28,12 @@ public class Player extends User {
 		this.position = position;
 	}
 
-	public int getPunkte() {
-		return punkte;
+	public int getPoints() {
+		return points;
 	}
 
-	public void setPunkte(int punkte) {
-		this.punkte = punkte;
+	public void setPoints(int points) {
+		this.points = points;
 	}
 
   // -------------------------------------------------------------------
@@ -41,7 +41,7 @@ public class Player extends User {
   // -------------------------------------------------------------------
 	
 	public String toString() {
-		return "[id="+getId()+", uername="+getUsername()+", posi="+position+", team="+getTeamId()+", readyToPlay="+getSpielbereit()+", points="+getPunkte()+"]";
+		return "[id="+getId()+", uername="+getUsername()+", posi="+position+", team="+getTeamId()+", readyToPlay="+getSpielbereit()+", points="+getPoints()+"]";
 	}
 
 	public boolean isInMyTeam (Player p) {

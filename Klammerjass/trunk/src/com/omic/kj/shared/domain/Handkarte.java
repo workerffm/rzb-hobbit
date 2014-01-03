@@ -5,7 +5,9 @@ package com.omic.kj.shared.domain;
  */
 public class Handkarte {
   private Karte karte;
-	private Boolean offen;
+	private boolean offen;
+	private int position;  //spieler position
+	private int location;  //0=Nicht sichtbar, 1=Hand, 2=Original, 3=Stich, 4=Stapel
 	
   public Karte getKarte() {
 		return karte;
@@ -13,10 +15,22 @@ public class Handkarte {
 	public void setKarte(Karte karte) {
 		this.karte = karte;
 	}
-	public Boolean getOffen() {
+	public boolean getOffen() {
 		return offen;
 	}
-	public void setOffen(Boolean offen) {
+	public void setOffen(boolean offen) {
 		this.offen = offen;
+	}
+	public int getPosition() {
+		return position;
+	}
+	public void setPosition(int position) {
+		this.position = position;
+	}
+	public int getLocation() {
+		return location;
+	}
+	public void setLocation(int location) {
+		this.location = location;
 	}
 }
