@@ -31,19 +31,32 @@ public class ComputerPlayer implements CommandListener {
 	@Override
 	public void toPlayer(PlayerCommand command) {
 		if (command.getPlayerId() == me.getId()) {
+			log.info(command + "");
 			switch (command.getCommand()) {
 			case playerinfo: {
 				gameinfo = command.getInfo();
 				break;
 			}
-			case frageOriginal:
+			case frageOriginal: {
 				PlayerResponse response = new PlayerResponse();
 				response.setPlayerId(gameinfo.getPlayerId());
 				response.setResponse(Response.nein);
 				listener.onMessage(response);
 				break;
 			}
-			log.info(command + "");
+			case spieleKarte:{
+				gameinfo = command.getInfo();
+				PlayerResponse response = new PlayerResponse();
+				response.setPlayerId(gameinfo.getPlayerId());
+				response.setResponse(Response.play);
+				for (CardInfo i : gameinfo.getKarten()) {
+					if (i.getPosition() == gameinfo.getPosition() && i.getLocation() == 1) {
+						response.setGespielteKarte(i.getKarte());
+					}
+				}
+				listener.onMessage(response);
+				break;
+			}}
 		}
 	}
 

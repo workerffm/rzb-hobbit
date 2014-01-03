@@ -3,7 +3,7 @@ package com.omic.kj.shared.domain;
 /**
  * used for client side rendering
  */
-public class Handkarte {
+public class CardInfo {
   private Karte karte;
 	private boolean offen;
 	private int position;  //spieler position
@@ -33,4 +33,9 @@ public class Handkarte {
 	public void setLocation(int location) {
 		this.location = location;
 	}
+	@Override
+	public String toString() {
+		return "CardInfo [karte=" + karte + ", offen=" + offen + ", position=" + position + ", location=" + location + "]";
+	}
+	
 }

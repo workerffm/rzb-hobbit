@@ -32,6 +32,10 @@ final class PlayRound {
 	public void setCurrentPosition(int currentPosition) {
 		this.currentPosition = currentPosition;
 	}
+	@Override
+	public String toString() {
+		return "PlayRound [winner=" + winner + ", points=" + points + ", nr=" + nr + ", currentPosition=" + currentPosition + "]";
+	}
 
 
 }

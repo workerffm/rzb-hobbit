@@ -14,7 +14,7 @@ public class PlayerCommand {
   /** Karte 1 vom Stapel, Frage ob diese Farbe gespielt werden soll */
   private Farbe ersteKarte;
   private PlayerInfo playerInfo; 
-  private RoundInfo roundInfo; 
+//  private RoundInfo roundInfo; 
   private GameInfo gameInfo;
   
 	public int getPlayerId() {
@@ -59,11 +59,6 @@ public class PlayerCommand {
 	public void setInfo(PlayerInfo info) {
 		this.playerInfo = info;
 	}
-	@Override
-	public String toString() {
-		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", gameId=" + getGameId() + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
-				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", info=" + playerInfo + "]";
-	}
 	public int getGameId() {
 		return gameId;
 	}
@@ -75,6 +70,11 @@ public class PlayerCommand {
 	}
 	public void setGameInfo(GameInfo gameInfo) {
 		this.gameInfo = gameInfo;
+	}
+	@Override
+	public String toString() {
+		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", gameId=" + gameId + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
+				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", playerInfo=" + playerInfo + ", gameInfo=" + gameInfo + "]";
 	}
 	
 }

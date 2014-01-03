@@ -14,7 +14,7 @@ public class PlayerInfo {
 	//private boolean trumpfzeigen; // soll spieler die originalkarte offen zeigen?
 	private String geber, aufspieler;
 	private Farbe trumpf;
-	private Set<Handkarte> karten;
+	private Set<CardInfo> karten;
 	
 	public int getPlayerId() {
 		return playerId;
@@ -66,12 +66,7 @@ public class PlayerInfo {
 	public void setAktiv(boolean aktiv) {
 		this.aktiv = aktiv;
 	}
-//	public boolean isTrumpfzeigen() {
-//		return trumpfzeigen;
-//	}
-//	public void setTrumpfzeigen(boolean trumpfzeigen) {
-//		this.trumpfzeigen = trumpfzeigen;
-//	}
+
 	public Farbe getTrumpf() {
 		return trumpf;
 	}
@@ -90,10 +85,17 @@ public class PlayerInfo {
 	public void setAufspieler(String aufspieler) {
 		this.aufspieler = aufspieler;
 	}
-	public Set<Handkarte> getKarten() {
+	public Set<CardInfo> getKarten() {
 		return karten;
 	}
-	public void setKarten(Set<Handkarte> karten) {
+	public void setKarten(Set<CardInfo> karten) {
 		this.karten = karten;
 	}
+	@Override
+	public String toString() {
+		return "PlayerInfo [playerId=" + playerId + ", gameName=" + gameName + ", playerName=" + playerName + ", position=" + position + ", runde=" + runde + ", punkte=" + punkte + ", spieler=" + spieler
+				+ ", aktiv=" + aktiv + ", geber=" + geber + ", aufspieler=" + aufspieler + ", trumpf=" + trumpf + ", karten=" + karten + "]";
+	}
+
+	
 }

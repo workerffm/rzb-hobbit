@@ -9,7 +9,7 @@ class GameEvent {
   
 	public GameEvent(Event event, GameState state) {
 		this.event = event;
-		this.state = state;
+		this.setState(state);
 	}
 	public GameEvent() {
 	}
@@ -25,4 +25,16 @@ class GameEvent {
 	public void setPlayerResponse(PlayerResponse playerResponse) {
 		this.playerResponse = playerResponse;
 	}
+	public GameState getState() {
+		return state;
+	}
+	public void setState(GameState state) {
+		this.state = state;
+	}
+	@Override
+	public String toString() {
+		return "GameEvent [event=" + event + ", playerResponse=" + playerResponse + ", state=" + state + "]";
+	}
+
+	
 }

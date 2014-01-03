@@ -8,31 +8,54 @@ import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.*;
 
 public class TestKJ {
-	 static Logger log; 
-	
+	static Logger log;
+	protected static PlayerInfo gameinfo;
+
 	public static void main(String[] args) throws Exception {
 		InputStream is = ClassLoader.getSystemResourceAsStream("logging.properties");
 		LogManager.getLogManager().readConfiguration(is);
 		is.close();
-		
+
 		log = Logger.getLogger("TestPlayer");
-		
+
 		final LocalGameConnector conn = LocalGameConnector.getConnector();
-		final User u= conn.login("markus","xxx");
-		conn.addPlayerCommandListener(u, new PlayerCommandListener() {
+		final User me = conn.login("markus", "xxx");
+
+		conn.addPlayerCommandListener(me, new PlayerCommandListener() {
 			@Override
 			public void onMessage(PlayerCommand command) {
-			  log.info("I'm user "+u.getId()+" "+command+"");	
+				log.info(command + "");
+				if (command.getPlayerId() == me.getId()) {
+					switch (command.getCommand()) {
+					case playerinfo: {
+						gameinfo = command.getInfo();
+						break;
+					}
+					case frageOriginal: {
+						PlayerResponse response = new PlayerResponse();
+						response.setPlayerId(gameinfo.getPlayerId());
+						response.setResponse(Response.ja);
+						conn.playerResponse(response);
+						break;
+					}
+					case spieleKarte:{
+						gameinfo = command.getInfo();
+						PlayerResponse response = new PlayerResponse();
+						response.setPlayerId(gameinfo.getPlayerId());
+						response.setResponse(Response.play);
+						for(CardInfo i:gameinfo.getKarten()) {
+							if(i.getPosition()==gameinfo.getPosition() && i.getLocation()==1){
+								response.setGespielteKarte(i.getKarte());
+							}
+						}
+						conn.playerResponse(response);
+						break;
+					}}
+				}
 			}
 		});
-    conn.startGame(u, new GameSettings(true,3,300));
-    
-    for(Response r:Response.values()){
-      PlayerResponse response = new PlayerResponse();
-      response.setPlayerId(u.getId());
-      response.setResponse(r);
-  		conn.playerResponse(response);
-    }
+		conn.startGame(me, new GameSettings(true, 3, 300));
+
 	}
 
 }
