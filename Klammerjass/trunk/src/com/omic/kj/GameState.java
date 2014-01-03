@@ -21,6 +21,6 @@ public enum GameState {
 	,S0
 	,S1
 	,S2
-	,GOV, S4, S3, S5
+	,GOV, S4, S3, S5, G1a
 	;
 }

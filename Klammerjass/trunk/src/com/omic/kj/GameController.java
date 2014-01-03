@@ -166,7 +166,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	  }
 	}
 
-	private ArrayBlockingQueue<PlayerCommand> commandQueue = new ArrayBlockingQueue<>(10);
+	private ArrayBlockingQueue<PlayerCommand> commandQueue = new ArrayBlockingQueue<>(50);
 	
 	/**
 	 * Forward message to all player listener
