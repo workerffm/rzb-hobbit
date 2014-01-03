@@ -11,7 +11,7 @@ public class PlayerResponse {
 	private int playerId;
   private Response response;
   private Farbe farbe;
-  private Karte karte;
+  private Karte gespielteKarte;
   
 	public int getPlayerId() {
 		return playerId;
@@ -32,14 +32,15 @@ public class PlayerResponse {
 		this.farbe = farbe;
 	}
 
+	public Karte getGespielteKarte() {
+		return gespielteKarte;
+	}
+	public void setGespielteKarte(Karte gespielteKarte) {
+		this.gespielteKarte = gespielteKarte;
+	}
 	@Override
 	public String toString() {
-		return "PlayerResponse [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", response=" + response + ", farbe=" + farbe + "]";
+		return "PlayerResponse [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", response=" + response + ", farbe=" + farbe + ", gespielteKarte=" + gespielteKarte + "]";
 	}
-	public Karte getKarte() {
-		return karte;
-	}
-	public void setKarte(Karte karte) {
-		this.karte = karte;
-	}
+	
 }

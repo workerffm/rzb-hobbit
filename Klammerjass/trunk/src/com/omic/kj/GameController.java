@@ -2,6 +2,8 @@ package com.omic.kj;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import com.omic.kj.shared.domain.*;
@@ -26,6 +28,8 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		this.activePlayers = new HashSet<>();	
 		this.activeGames = new HashSet<>();
 		this.commandListeners = new HashSet<>();
+		CommandThread ct = new CommandThread();
+		ct.start();
 	} 
 	
 	/**
@@ -37,8 +41,8 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 
 	@Override
 	public User login(String us, String pw) throws Exception {
-		if (StringUtils.isBlank(pw)) throw new Exception("Invalid user");
-		if (StringUtils.isBlank(us)) throw new Exception("Invalid user");
+		if (StringUtils.isBlank(pw)) throw new Exception("Invalid user(1)");
+		if (StringUtils.isBlank(us)) throw new Exception("Invalid user(2)");
 		
 		synchronized(this.controllerLock) {
 			for(Player cp:activePlayers) {
@@ -68,7 +72,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		final Player p = new Player();
 		p.setUsername(username);
 		p.setPosition(1);
-		p.setPunkte(0);
+		p.setPoints(0);
 		p.setSpielbereit(true);
 		p.setTeamId(1);
 		synchronized (this.controllerLock) {
@@ -87,13 +91,17 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 			throw new IllegalArgumentException("user");
 		}
 
+		final Player p = findPlayer(user);
+		if(p==null){
+			throw new Exception("User "+user.getUsername()+" not found.");
+		}
+		
 		final Game actualGame = findGame(user.getId());
 		if (actualGame!=null) {
 	  	throw new Exception ("User "+user.getUsername()+" already joined to game "+actualGame);
 		}
-		final Player p = findPlayer(user);
 		
-		// Spiel gegen PC
+		// Spiel gegen PC?
 		if(settings.isOption_PlayWithPC()){
 			p.setSpielbereit(true);
   	  p.setComputer(false);
@@ -158,16 +166,35 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	  }
 	}
 
+	private ArrayBlockingQueue<PlayerCommand> commandQueue = new ArrayBlockingQueue<>(10);
+	
 	/**
 	 * Forward message to all player listener
 	 */
-	public void toPlayer(final PlayerCommand command) {
-	  command.setPlayerCommandId(playerCommandId);
-	  playerCommandId++;
-  	for(CommandListener listener:commandListeners) {
-  		log.fine("CMD "+command.getPlayerCommandId()+" --> "+listener);
-		  listener.toPlayer(command);
-  	}
+	public void toPlayer(final PlayerCommand c) {
+		this.commandQueue.add(c);
+	}
+	
+	private final class CommandThread extends Thread{
+		public void run() {
+			PlayerCommand command;
+			for(;;) {
+				try {
+					command = GameController.this.commandQueue.poll(1, TimeUnit.MINUTES);
+					if (command!=null) {
+						for(CommandListener listener:commandListeners) {
+							command.setPlayerCommandId(playerCommandId);
+							playerCommandId++;
+							log.fine("CMD "+command.getPlayerCommandId()+" --> "+listener);
+							listener.toPlayer(command);
+						}
+					}
+				} catch (InterruptedException e) {
+          log.warning(e.getMessage());
+					break;
+				}
+		}
+	}
 	}
 	
 	// --------------------------------------------------------------------
@@ -180,7 +207,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 			  if(cp.getUsername().equals(user.getUsername())) return cp;  	
 			}
 		}
-		throw new Exception("User not found.");
+		return null;
 	}
 
 	private Game findGame(int userId) {

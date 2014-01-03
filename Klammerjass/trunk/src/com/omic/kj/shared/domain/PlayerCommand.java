@@ -15,6 +15,7 @@ public class PlayerCommand {
   private Farbe ersteKarte;
   private PlayerInfo playerInfo; 
   private RoundInfo roundInfo; 
+  private GameInfo gameInfo;
   
 	public int getPlayerId() {
 		return playerId;
@@ -68,6 +69,12 @@ public class PlayerCommand {
 	}
 	public void setGameId(int gameId) {
 		this.gameId = gameId;
+	}
+	public GameInfo getGameInfo() {
+		return gameInfo;
+	}
+	public void setGameInfo(GameInfo gameInfo) {
+		this.gameInfo = gameInfo;
 	}
 	
 }

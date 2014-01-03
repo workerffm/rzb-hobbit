@@ -17,8 +17,10 @@ public enum GameState {
 	,G13
 	,G14
 	,X2
-	,X4
+	,X1
 	,S0
 	,S1
+	,S2
+	,GOV, S4, S3, S5
 	;
 }

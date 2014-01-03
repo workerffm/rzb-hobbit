@@ -9,14 +9,13 @@ final class PlayCard
 	private final Karte karte;
 	
   /* game data: */
-	private int round;         // trick (engl.) Stich
-	private int order;         // Reihenfolge innerhalb vom Stich
+	private int roundNr;        // Runden Nummer
+	private int roundPosition;  // Reihenfolge innerhalb vom Stich
 	private Player owner;
   
   
   public PlayCard(Karte c) {
   	karte = c;
-		round = 0;
   }
 
 	public void setOwner(Player p) {
@@ -31,7 +30,7 @@ final class PlayCard
 	 * @return Karte is assigned to an owner/player and still on the hand, not played.
 	 */
 	public boolean isUnplayed() {
-		return owner!=null && /*!original && */round==0;
+		return owner!=null && /*!original && */roundNr==0;
 	}
 
 	/**
@@ -44,8 +43,8 @@ final class PlayCard
 
 	public String toString() {
 		return "["
-		  +round+"|"
-		  +order+"|"
+		  +roundNr+"|"
+		  +roundPosition+"|"
 		  +padr((owner!=null?owner.getUsername():null),15)+"|"
 		  +(isFree()?"free":"used")+"|"
 		  //+padr((original?"orig.":""),5)+"|"
@@ -67,6 +66,10 @@ final class PlayCard
 		return karte.getFarbe();
 	}
 
+	public Kartenwert getWert() {
+		return karte.getWert();
+	}
+
 	public boolean equals (Farbe c, Kartenwert n) {
 		if(c==null||n==null) return false;
 		return  (c==karte.getFarbe() && n==karte.getWert());
@@ -77,33 +80,11 @@ final class PlayCard
 		return  (karte.getFarbe()==c.getFarbe() && karte.getWert()==c.getWert());
 	}
 
-	public void setRound(int round) {
-		this.round = round;
-	}
-
-	/**
-	 * Runde, in der die Karte gespielt wurde.
-	 * @return
-	 */
-	public int getRound() {
-		return round;
-	}
-
 	public Karte getKarte() {
 		return karte;
 	}
 
-  /**
-   * Reihenfolge innerhalb vom Stich
-   * @return
-   */
-  public int getOrder() {
-		return order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
-	}
+ 
 
 	/**
 	 * @param Farbe TrumpfFarbe
@@ -126,6 +107,26 @@ final class PlayCard
 	 */
 	public int getRank (Farbe trumpf) {
     return karte.getRank() + (trumpf==null ? 0 : (karte.getFarbe() == trumpf ? 100 : 0 ));
+	}
+
+	public int getPoints() {
+		return karte.getPunkte();
+	}
+
+	public int getRoundPosition() {
+		return roundPosition;
+	}
+
+	public void setRoundPosition(int roundPosition) {
+		this.roundPosition = roundPosition;
+	}
+
+	public int getRoundNr() {
+		return roundNr;
+	}
+
+	public void setRoundNr(int roundNr) {
+		this.roundNr = roundNr;
 	}	
 
 }

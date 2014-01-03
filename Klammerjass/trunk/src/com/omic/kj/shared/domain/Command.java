@@ -10,5 +10,5 @@ public enum Command {
 	frageTrumpffarbe,
 	frageBesser,
 	zeigeFuenfzig,
-	zeigeTerz;
+	zeigeTerz, tauscheSieben, spieleKarte;
 }

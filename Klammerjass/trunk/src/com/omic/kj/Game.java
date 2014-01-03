@@ -10,44 +10,36 @@ final class Game {
 
 	private final Logger log = Logger.getLogger("Game");
 
-	private int gameId; // identifier for compare method
+	private int gameId; 							// identifier for compare method
 	private String gameName;
-	private int maximumPoints; // Spielende bei diesen Punkten
-	private int round; // Runde / Stich Nummer
-	private String teamName;
-	private Date start, end; // game duration
-	private List<PlayCard> cards; // 32 cards with special tags on it
-	private Farbe trumpf; // Trumpffarbe
-	private Player geber; // Kartengeber
-	private Player mainplayer; // Spieler/Gewinner beim "Reizen"
-	private Player firstPlayer; // Spieler der beim ersten Stich rausgekommen ist
-	private Player roundFirstPlayer; // Spieler der beim aktuellen Stich rausgekommen ist / rauskommen muß
-	private Player currentPlayer; // Der Spieler ist grad an der Reihe
-	private Karte roundCard; // Zuerst ausgespielte Karte in aktueller Runde, diese Farbe muß bedient werden.
-	private Karte original;
+	private int maximumPoints; 				// Spielende bei diesen Punkten
+	private Date start, end; 					// game duration
+	private List<PlayCard> playcards; // 32 cards with special tags on it
+	private Farbe trumpfFarbe;				// Trumpffarbe
+	private Player geber; 						// Kartengeber
+	private Player trumpfPlayer;		 	// Spieler der original oder kleines spielt.
+	private Karte original;     	 		// Die umgedrehte Karte beim Geben, für alle sichtbar.
+	private boolean originalSelected; // trumpfPlayer wählte original
+	private GameState state; 					// aktuelle Phase
+	private Player winner; 				 		// Spielgewinner
+
+	private int nextRoundNr; 					// ID,Rundennummer
+	private Player aufspieler; 				// Spieler der beim aktuellen Stich rausgekommt
 
 	private CommandListener commandListener; // send player command to this listener!
-	private ArrayBlockingQueue<PlayerResponse> responseQueue;
+	private ArrayBlockingQueue<GameEvent> eventQueue;
 
 	private final List<Player> player; // 2 to 4 players per game
 	private final Set<ComputerPlayer> computerPlayer; // save extra the auto player
-	private final List<PlayRound> rounds;
+	private final List<PlayRound> playrounds;
 
-	private GameState state;
 
-	/*             Spiel        | Runde
-	 * ----------------------------------------
-	 * Reizen     mainplayer      n/a      
-	 * Erster     firstPlayer     roundFirstPlayer   
-	 * Aktuell    n/a             currentPlayer  
-	 * Gewinner   sum(points)     roundwinner
-	 */
-
+	
 	public Game() {
 		this.player = new ArrayList<>();
 		this.computerPlayer = new HashSet<>();
-		this.rounds = new ArrayList<>();
-		this.responseQueue = new ArrayBlockingQueue<>(8);
+		this.playrounds = new ArrayList<>();
+		this.eventQueue = new ArrayBlockingQueue<>(10);
 	}
 
 	public void joinGame(final Player p, final GameSettings gs) throws Exception {
@@ -93,11 +85,10 @@ final class Game {
 
 		loadCards();
 
-		this.start = new Date();
-		this.teamName = "Team X";
-		this.gameName = "Game " + gameId;
-		this.round = 1;
-		this.state = GameState.G0;
+		start = new Date();
+		gameName = "Game " + gameId;
+		state = GameState.G0;
+
 		final int playerCount = player.size();
 
 		if (playerCount < 2 || playerCount > 4) {
@@ -108,13 +99,14 @@ final class Game {
 
 		for (;;) {
 
-			final PlayerResponse response = getNextPlayerResponse(2000);
-			log.info("State=" + this.state + ", response=" + response);
+			final GameEvent event = getNextEvent(20000);
+			log.info("State=" + state + ", event=" + event);
 
-			switch (this.state) {
+			switch (state) {
 
 			// -----------------------------------------------------------
 			case G0: {
+				nextRoundNr = 1;
 				selectGeber();
 				// 3 Karten für jeden
 				for (int i = 0; i < 3; i++) {
@@ -123,125 +115,417 @@ final class Game {
 					}
 				}
 				sendPlayerInfo();
-				this.state = GameState.G1;
+				gotoGameState(GameState.G1);
 				break;
 			}
 
 			// -----------------------------------------------------------
 			case G1: {
 				// 2 Karten für jeden
-				this.original = null;
+				original = null;
 				for (int i = 0; i < 2; i++) {
 					for (Player p : player) {
 						assignFreeCardToPlayer(p, p.getId() == this.geber.getId());
 					}
 				}
 				sendPlayerInfo();
-				this.state = GameState.G2;
+				gotoGameState(GameState.G2);
 				break;
 			}
 			// -----------------------------------------------------------
 			case G2: {
-				Player p = getPlayerFromGeber(+1);
-				sendPlayerCommand(p, Command.frageOriginal,new Response[]{Response.ja,Response.nein});
-				this.state = GameState.G3;
-				//
+				Player p = getPlayerLeftFromGeber(+1);
+				sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+				state = GameState.G3;
 				break;
 			}
 			// -----------------------------------------------------------
 			case G3: {
-				if (response != null) {
-
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
+						Player p = getPlayerLeftFromGeber(+2);
+						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						state = GameState.G4;
+					} else if (response.getResponse() == Response.ja) {
+						trumpfPlayer = getPlayerById(response.getPlayerId());
+						trumpfFarbe = original.getFarbe();
+						originalSelected = true;
+						gotoGameState(GameState.S0);
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G4: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
+						Player p = getPlayerLeftFromGeber(+3);
+						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						state = GameState.G5;
+					} else if (response.getResponse() == Response.ja) {
+						trumpfPlayer = getPlayerById(response.getPlayerId());
+						trumpfFarbe = original.getFarbe();
+						originalSelected = true;
+						gotoGameState(GameState.S0);
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G5: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
+						Player p = getPlayerLeftFromGeber(+0);
+						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						state = GameState.G6;
+					} else if (response.getResponse() == Response.ja) {
+						trumpfPlayer = getPlayerById(response.getPlayerId());
+						trumpfFarbe = original.getFarbe();
+						originalSelected = true;
+						gotoGameState(GameState.S0);
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G6: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
+						Player p = getPlayerLeftFromGeber(+1);
+						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						state = GameState.G7;
+					} else if (response.getResponse() == Response.ja) {
+						trumpfPlayer = getPlayerById(response.getPlayerId());
+						trumpfFarbe = original.getFarbe();
+						originalSelected = true;
+						gotoGameState(GameState.S0);
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G7: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
+						Player p = getPlayerLeftFromGeber(+2);
+						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						state = GameState.G8;
+					} else if (response.getResponse() == Response.ja) {
+						Player p = getPlayerLeftFromGeber(+1);
+						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						state = GameState.G11;
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G8: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
+						Player p = getPlayerLeftFromGeber(+3);
+						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						state = GameState.G9;
+					} else if (response.getResponse() == Response.ja) {
+						Player p = getPlayerLeftFromGeber(+2);
+						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						state = GameState.G12;
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G9: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
+						Player p = getPlayerLeftFromGeber(+0);
+						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						state = GameState.G10;
+					} else if (response.getResponse() == Response.ja) {
+						Player p = getPlayerLeftFromGeber(+3);
+						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						state = GameState.G13;
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G10: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.nein) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
+						gotoGameState(GameState.GOV);
+					} else if (response.getResponse() == Response.ja) {
+						Player p = getPlayerLeftFromGeber(+0);
+						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						state = GameState.G14;
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
 			// -----------------------------------------------------------
-			case G11: {
-				break;
-			}
-			// -----------------------------------------------------------
-			case G12: {
-				break;
-			}
-			// -----------------------------------------------------------
-			case G13: {
-				break;
-			}
-			// -----------------------------------------------------------
+			case G11:
+			case G12:
+			case G13:
 			case G14: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.waehleFarbe) {
+						trumpfPlayer = getPlayerById(response.getPlayerId());
+						trumpfFarbe = response.getFarbe();
+						originalSelected = false;
+						gotoGameState(GameState.S0);
+					} else {
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+					}
+				}
 				break;
 			}
+
 			// -----------------------------------------------------------
 			case S0: {
+				if (playerCount == 2 || playerCount == 3) {
+					/** Spieler, der die Trumpf 7 hält, kann mit 'Original' tauschen */
+					final PlayCard trumpf7 = getCard(trumpfFarbe, Kartenwert.Sieben);
+					final Player trumpf7_owner = trumpf7.getOwner();
+					if (trumpf7_owner != null && !original.equals(trumpf7)) {
+						sendPlayerCommand(trumpf7_owner, Command.tauscheSieben, new Response[] { Response.ja, Response.nein });
+						state = GameState.X1;
+					}
+				} else {
+					gotoGameState(GameState.S1);
+				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case S1: {
+					if (!areCardsAvailable()) {
+						gotoGameState(GameState.S4);
+					}
+					final PlayRound r = new PlayRound();
+					r.setNr(nextRoundNr);
+					r.setCurrentPosition(1);
+					nextRoundNr++;
+					playrounds.add(r);
+					gotoGameState(GameState.S2);
+				break;
+			}
+			// -----------------------------------------------------------
+			case S2: {
+				final PlayRound r = getCurrentRound();
+				Player p = getPlayerLeftFromAufspieler(r.getCurrentPosition()-1);
+				sendPlayerCommand(p, Command.spieleKarte, new Response[] { Response.play });
+				gotoGameState(GameState.S3);
+				break;
+			}
+			// -----------------------------------------------------------
+			case S3: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.play) {
+					  
+						final PlayCard c = getCard(response.getGespielteKarte());  
+						final Player p = getPlayerById(response.getPlayerId());
+						final PlayRound r = getCurrentRound(); 
+					  
+					  if(c==null) throw new Exception("card not found: "+response.getGespielteKarte());
+					  if(p==null) throw new Exception("player not found: "+response.getPlayerId());
+					  c.setRoundPosition(r.getCurrentPosition());
+					  c.setRoundNr(r.getNr());
+					  
+					  // TODO: Terz check
+					  // TODO: Bella check ...
+					  
+					  if(r.getCurrentPosition()>=playerCount){
+					  	// Runde ist beendet
+					  	calculatePointsInRound(r);
+					  	if (r.getNr()==1) {
+					  	  aufspieler = r.getWinner();	
+					  	}
+					  	gotoGameState(GameState.S1);
+					  }
+					  else {
+					  	// Weiter auf nächste Karte warten
+					  	r.setCurrentPosition(r.getCurrentPosition()+1);
+					  	gotoGameState(GameState.S2);
+					  }
+					}
+				}
+				break;
+			}
+			// -----------------------------------------------------------
+			case S4: {
+         // Spielende, Gesamtpunkte, Gewinner berechnen.
+				Player gameWinner = null; 
+				for (Player p:player) {
+				  if(gameWinner==null||p.getPoints()>gameWinner.getPoints())
+				  	gameWinner = p;
+				}
+				this.winner = gameWinner;
+				if (this.winner.getPoints() >= maximumPoints) {
+					sendGameInfo();
+					gotoGameState(GameState.GOV);
+				}
+				else {
+					sendGameInfo();
+					gotoGameState(GameState.S5);
+				}
+				break;
+			}
+			// -----------------------------------------------------------
+			case S5:{
+				break;
+			}
+			// -----------------------------------------------------------
+			case GOV:{
+				end = new Date();
+				break;
+			}
+			// -----------------------------------------------------------
+			case X1: {
+				if (event.getEvent() == Event.player) {
+					final PlayerResponse response = event.getPlayerResponse();
+					if (response.getResponse() == Response.ja) {
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Tausche die 7!");
+						PlayCard trumpf7 = getCard(trumpfFarbe, Kartenwert.Sieben);
+						PlayCard changeCard = getCard(trumpfFarbe, original.getWert());
+						changeCard.setOwner(trumpf7.getOwner());
+						trumpf7.setOwner(null);
+						original = trumpf7.getKarte();
+					}
+				}
+				gotoGameState(GameState.S1);
 				break;
 			}
 			// -----------------------------------------------------------
 			case X2: {
 				break;
 			}
-			// -----------------------------------------------------------
-			case X4: {
-				break;
-			}
 			}
 		}
-		//sayHello();
-		//selectGeber();
-		//geben();
-		//	GameLogger.printGame(game);
-		//	startRounds();
+	}
+
+
+
+	private void sendGameInfo() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+  	* - Stichgewinner ermitteln
+	  * - Mitspieler im gleichen Team ermitteln
+	  * - Punkte zählen und allen im Team addieren
+	  */
+	private void calculatePointsInRound (final PlayRound round) {
+		Player winner = null;
+		PlayCard winnerCard = null;
+		int points = 0;
+		for (PlayCard c : playcards) {
+			if (c.getRoundNr()==round.getNr()) {
+			  if (winner==null) {
+			  	winner = c.getOwner();
+			  	winnerCard = c;
+			  }
+			  else {
+			  	int r1 = winnerCard.getRank(trumpfFarbe);
+			  	int r2 = c.getRank(trumpfFarbe);
+			  	if (r2>r1) {
+				  	winner = c.getOwner();
+				  	winnerCard = c;
+			    }	
+			  }
+			  points += c.getPoints();
+			  // Zusatzgewinne
+			  // 1) Jass
+			  if(c.isJass(trumpfFarbe)) {
+			  	points += 20;
+			  }
+			  // 2) Mie
+			  if(c.isMie(trumpfFarbe)) {
+			  	points += 14;
+			  }
+			}
+		}
+		round.setWinner(winner);
+		round.setPoints(points);
+		winner.setPoints(winner.getPoints()+points);
+		log.fine ("Round "+round.getNr()+": "+points+" points for player "+winner.getUsername());
 	}
 
 
 	/**
-	 * n-ter Spieler im Uhrzeigersinn vom Geber ausgehend
-	 * =REST(A2-1+$B$1;4)+1
+	 * Spielende feststellen:  wenn alle gegebenen Karten im Stich verwendet worden sind.
+	 * @return True, wenn alle gegebenen Karten im Stich verwendet worden sind.
 	 */
-	private Player getPlayerFromGeber(int step) throws Exception {
-		int nextPosition = ((this.geber.getPosition() - 1 + step) % player.size()) + 1;
-		for (Player p : player) {
-			if (p.getPosition() == nextPosition)
-				return p;
+	private boolean areCardsAvailable() {
+		for (PlayCard c : playcards) {
+			if (c.getOwner() != null && c.getRoundNr() == 0) {
+				return true;
+			}
 		}
-		throw new Exception("next player not found");
+		log.info("Cards available: NO");
+		return false;
 	}
 
-	private void sendPlayerInfo() {
-		for (Player p : player) {
-			sendPlayerInfo(p);
+	private PlayCard getCard(Farbe f, Kartenwert w) {
+		for (PlayCard c : playcards) {
+			if (c.equals(f,w))
+				return c;
 		}
+		return null;
+	}
+
+	private PlayCard getCard(Karte k) {
+		for (PlayCard c : playcards) {
+			if(c.equals(k))
+				return c;
+		}
+		return null;
+	}
+
+
+	private void gotoGameState(GameState state) {
+		GameEvent e = new GameEvent(Event.gostate, state);
+		eventQueue.add(e);
+	}
+
+	private Player getPlayerById(int playerId) {
+		for (Player p : player) {
+			if (p.getId() == playerId)
+				return p;
+		}
+		return null;
 	}
 
 	/**
@@ -251,54 +535,43 @@ final class Game {
 	public void selectGeber() {
 		this.geber = player.iterator().next();
 	}
+	
+	/**
+	 * n-ter Spieler im Uhrzeigersinn vom Geber ausgehend
+	 * =REST(A2-1+$B$1;4)+1
+	 */
+	private Player getPlayerLeftFromGeber(int step) throws Exception {
+		final int nextPosition = ((this.geber.getPosition() - 1 + step) % player.size()) + 1;
+		for (Player p : player) {
+			if (p.getPosition() == nextPosition)
+				return p;
+		}
+		throw new Exception("next player not found(1)");
+	}
 
-	//	private void geben() throws Exception {
-	//		//Set<Player> player = game.getPlayers();
-	//		if (player.size() == 4)
-	//			geben4();
-	//		else if (player.size() == 2 || player.size() == 3)
-	//			geben2();
-	//		else
-	//			throw new Exception("Unpassende Spieleranzahl.");
-	//	}
-	//
-	//	private void geben2() {
-	//
-	//	}
-
-	//	/**
-	//	* Kartenverteilregel für 4 Spieler
-	//	* @throws GameException 
-	//	*/
-	//	private void geben4() {
-	//		//		// 3 Karten für jeden
-	//		//		for (int i = 0; i < 3; i++) {
-	//		//			for (Player p : player) {
-	//		//				assignFreeCardToPlayer(p);
-	//		//				sendPlayerInfo(p);
-	//		//			}
-	//		//		}
-	//		//		// 2 Karten für jeden
-	//		//		for (int i = 0; i < 2; i++) {
-	//		//			for (Player p : player) {
-	//		//				assignFreeCardToPlayer(p);
-	//		//				sendPlayerInfo(p);
-	//		//			}
-	//		//		}
-	//		//			boolean ok = pli(geber).askOriginal(game);
-	//		//			if (ok) {
-	//		//				// 3 Karten für jeden
-	//		//				for (int i = 0; i < 3; i++) {
-	//		//					for (Player p : player) {
-	//		//						assignFreeCardToPlayer(p);
-	//		//						sendPlayerInfo(p);
-	//		//					}
-	//		//				}
-	//		//			}
-	//		//			else{
-	//		//				throw new GameOverException("Kein Trumpf gewählt.");
-	//		//			}
-	//	}
+	
+	private Player getPlayerLeftFromAufspieler(int step) throws Exception {
+		final int nextPosition = ((this.aufspieler.getPosition() - 1 + step) % player.size()) + 1;
+		for (Player p : player) {
+			if (p.getPosition() == nextPosition)
+				return p;
+		}
+		throw new Exception("next player not found(2)");
+	}
+	
+	private void sendPlayerInfo() {
+		for (Player p : player) {
+			sendPlayerInfo(p);
+		}
+	}
+	
+	private void sendPlayerMsg(final Player p, final String message) {
+		final PlayerCommand pc = new PlayerCommand();
+		pc.setPlayerId(p.getId());
+		pc.setGameId(gameId);
+		pc.setCommand(Command.say);
+		this.commandListener.toPlayer(pc);
+	}
 
 	private void sendPlayerInfo(final Player p) {
 		final PlayerCommand pc = new PlayerCommand();
@@ -321,23 +594,24 @@ final class Game {
 
 	private PlayerInfo buildPlayerInfo(final Player p) {
 		final PlayerInfo i = new PlayerInfo();
-		i.setAufspieler(roundFirstPlayer != null ? roundFirstPlayer.getUsername() : "");
+		i.setAufspieler(aufspieler != null ? aufspieler.getUsername() : "");
 		i.setGameName(gameName);
-		i.setGeber(geber.getUsername());
+		i.setGeber(geber!=null ? geber.getUsername():"");
 		i.setKarten(getCardsOnHand(p));
-		i.setAktiv(false);
+		i.setAktiv(p.equals(aufspieler));
 		i.setPlayerId(p.getId());
 		i.setPlayerName(p.getUsername());
 		i.setPosition(p.getPosition());
-		i.setPunkte(p.getPunkte());
-		i.setRunde(round);
-		i.setTrumpf(trumpf);
+		i.setPunkte(p.getPoints());
+		final PlayRound r = getCurrentRound();
+		i.setRunde(r==null?0:r.getNr() );
+		i.setTrumpf(trumpfFarbe);
 		return i;
 	}
 
 	private Set<Handkarte> getCardsOnHand(Player p) {
 		final Set<Handkarte> playercards = new HashSet<>();
-		for (PlayCard pc : cards) {
+		for (PlayCard pc : playcards) {
 			if (pc.getOwner() != null && pc.getOwner().getId() == p.getId()) {
 				Handkarte hc = new Handkarte();
 				hc.setKarte(pc.getKarte());
@@ -348,6 +622,10 @@ final class Game {
 		return playercards;
 	}
 
+	private PlayRound getCurrentRound() {
+		return playrounds.size()>0?playrounds.get(playrounds.size()-1):null;
+	}
+	
 	private void sayHello() {
 		for (Player p : player) {
 			PlayerCommand cmd = new PlayerCommand();
@@ -361,7 +639,7 @@ final class Game {
 	private void assignFreeCardToPlayer(final Player p, boolean assignOriginal) {
 		for (;;) {
 			long skip = Math.round(Math.random() * 61), s = 0;
-			for (final PlayCard c : cards) {
+			for (final PlayCard c : playcards) {
 				if (s++ >= skip) {
 					if (c.isFree()) {
 						c.setOwner(p);
@@ -390,7 +668,7 @@ final class Game {
 	}
 
 	private void setCards(List<PlayCard> playCards) {
-		this.cards = playCards;
+		this.playcards = playCards;
 	}
 
 	public void setId(int id) {
@@ -398,7 +676,9 @@ final class Game {
 	}
 
 	public void stopGame() {
-		// TODO: 
+		GameEvent e = new GameEvent();
+		e.setEvent(Event.stop);
+		this.eventQueue.add(e);
 	}
 
 	public void setCommandListener(CommandListener commandListener) {
@@ -406,11 +686,14 @@ final class Game {
 	}
 
 	public void onPlayerResponse(PlayerResponse response) {
-		this.responseQueue.add(response);
+		GameEvent e = new GameEvent();
+		e.setEvent(Event.player);
+		e.setPlayerResponse(response);
+		this.eventQueue.add(e);
 	}
 
-	private PlayerResponse getNextPlayerResponse(int timeout_ms) throws InterruptedException {
-		return this.responseQueue.poll(timeout_ms, TimeUnit.MILLISECONDS);
+	private GameEvent getNextEvent(int timeout_ms) throws InterruptedException {
+		return this.eventQueue.poll(timeout_ms, TimeUnit.MILLISECONDS);
 	}
 
 }
