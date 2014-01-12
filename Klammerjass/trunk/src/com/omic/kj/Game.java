@@ -388,6 +388,7 @@ final class Game {
 							throw new Exception("card not found: " + response.getGespielteKarte());
 						if (p == null)
 							throw new Exception("player not found: " + response.getPlayerId());
+						
 						c.setRoundPosition(r.getCurrentPosition());
 						c.setRoundNr(r.getNr());
 
@@ -636,12 +637,12 @@ final class Game {
 	private Set<CardInfo> buildCardInfo() {
 		final Set<CardInfo> playercards = new HashSet<>();
 		for (PlayCard pc : playcards) {
-			CardInfo hc = new CardInfo();
-			hc.setKarte(pc.getKarte());
-			hc.setOffen(pc.getOwner() != null && !pc.getOwner().isComputer());
-			hc.setPosition(pc.getOwner() != null ? pc.getOwner().getPosition() : 0);
+			CardInfo ci = new CardInfo();
+			ci.setKarte(pc.getKarte());
+			ci.setOffen(pc.getOwner() != null && !pc.getOwner().isComputer());
+			ci.setPosition(pc.getOwner() != null ? pc.getOwner().getPosition() : 0);
 
-			int location = 0; // Karte nicht sichtbar
+			int location = 0; // Karte bereits gespielt
 
 			if (pc.equals(original)) {
 				if (state == GameState.G2 || state == GameState.G3 || state == GameState.G4 || state == GameState.G5) {
@@ -657,8 +658,8 @@ final class Game {
 			if (location == 0 && pc.getOwner() != null && pc.getRoundNr() == 0) {
 				location = 1; // Hand, nicht gespielt
 			}
-			hc.setLocation(location);
-			playercards.add(hc);
+			ci.setLocation(location);
+			playercards.add(ci);
 		}
 		return playercards;
 	}
