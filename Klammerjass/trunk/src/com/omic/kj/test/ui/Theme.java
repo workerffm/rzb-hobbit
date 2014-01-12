@@ -14,18 +14,18 @@ public class Theme {
 		c.setBackground(Color.black);
 		c.setFont(ftLarge);
 		if (c instanceof JButton) {
-			c.setBorder(new CompoundBorder(new EmptyBorder(50, 50, 50, 50), new LineBorder(Color.orange, 10)));
+			c.setBorder(new CompoundBorder(new EmptyBorder(50, 50, 50, 50), new LineBorder(Color.orange, 10,true)));
 		}
 		return c;
 	}
 
 	static JComponent style2(JComponent c) {
-		c.setOpaque(true);
-		c.setForeground(Color.orange);
-		c.setBackground(Color.blue);
+		c.setOpaque(false);
+		c.setForeground(Color.blue);
+		//c.setBackground(Color.blue);
 		c.setFont(ftLarge);
 		if (c instanceof JButton) {
-			c.setBorder(new CompoundBorder(new EmptyBorder(50, 50, 50, 50), new LineBorder(Color.orange, 10)));
+			c.setBorder(new CompoundBorder(new EmptyBorder(50, 50, 50, 50), new LineBorder(Color.orange, 10,true)));
 		}
 		return c;
 	}
