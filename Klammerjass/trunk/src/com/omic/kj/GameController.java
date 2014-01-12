@@ -183,6 +183,9 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 					command = GameController.this.commandQueue.poll(1, TimeUnit.MINUTES);
 					if (command!=null) {
 						for(CommandListener listener:commandListeners) {
+							//
+							//TODO: distribute command to player which are in the same Game only!
+							//
 							command.setPlayerCommandId(playerCommandId);
 							playerCommandId++;
 							log.fine("CMD "+command.getPlayerCommandId()+" --> "+listener);

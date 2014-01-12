@@ -10,6 +10,8 @@ import com.omic.kj.shared.domain.*;
 
 /**
  * Alternative: RMI Client connection to "ServerInterface" (delegate)
+ * TODO: remove hashmap, this class is for 1 player/user connection only!!
+ * TODO: add queue and thread AND add game channel on server side
  */
 public final class LocalGameConnector implements ClientInterface {
 

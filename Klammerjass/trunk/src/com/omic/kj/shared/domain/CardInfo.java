@@ -7,7 +7,7 @@ public class CardInfo {
   private Karte karte;
 	private boolean offen;
 	private int position;  //spieler position
-	private int location;  //0=Nicht sichtbar, 1=Hand, 2=Original, 3=Stich, 4=Stapel
+	private int location;  //0=bereits gespielt/nicht sichtbar, 1=auf Hand, 2=Original, 3=Stich, 4=Stapel
 	
   public Karte getKarte() {
 		return karte;
