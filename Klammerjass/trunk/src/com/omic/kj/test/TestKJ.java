@@ -26,7 +26,7 @@ public class TestKJ {
 			public void onMessage(PlayerCommand command) {
 				log.info(command + "");
 				if (command.getPlayerId() == me.getId()) {
-					switch (command.getCommand()) {
+					switch (command.getCommandCode()) {
 					case playerinfo: {
 						gameinfo = command.getInfo();
 						break;
@@ -34,7 +34,7 @@ public class TestKJ {
 					case frageOriginal: {
 						PlayerResponse response = new PlayerResponse();
 						response.setPlayerId(gameinfo.getPlayerId());
-						response.setResponse(Response.ja);
+						response.setResponseCode(ResponseCode.ja);
 						conn.playerResponse(response);
 						break;
 					}
@@ -42,7 +42,7 @@ public class TestKJ {
 						gameinfo = command.getInfo();
 						PlayerResponse response = new PlayerResponse();
 						response.setPlayerId(gameinfo.getPlayerId());
-						response.setResponse(Response.play);
+						response.setResponseCode(ResponseCode.play);
 						for(CardInfo i:gameinfo.getKarten()) {
 							if(i.getPosition()==gameinfo.getPosition() && i.getLocation()==1){
 								response.setGespielteKarte(i.getKarte());

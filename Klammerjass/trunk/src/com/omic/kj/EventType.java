@@ -1,5 +1,5 @@
 package com.omic.kj;
 
-public enum Event {
+public enum EventType {
   player, gostate, stop;
 }

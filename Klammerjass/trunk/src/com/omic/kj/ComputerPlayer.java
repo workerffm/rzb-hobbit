@@ -32,7 +32,7 @@ public class ComputerPlayer implements CommandListener {
 	public void toPlayer(PlayerCommand command) {
 		if (command.getPlayerId() == me.getId()) {
 			log.info(command + "");
-			switch (command.getCommand()) {
+			switch (command.getCommandCode()) {
 			case playerinfo: {
 				gameinfo = command.getInfo();
 				break;
@@ -40,7 +40,7 @@ public class ComputerPlayer implements CommandListener {
 			case frageOriginal: {
 				PlayerResponse response = new PlayerResponse();
 				response.setPlayerId(gameinfo.getPlayerId());
-				response.setResponse(Response.nein);
+				response.setResponseCode(ResponseCode.nein);
 				listener.onMessage(response);
 				break;
 			}
@@ -48,7 +48,7 @@ public class ComputerPlayer implements CommandListener {
 				gameinfo = command.getInfo();
 				PlayerResponse response = new PlayerResponse();
 				response.setPlayerId(gameinfo.getPlayerId());
-				response.setResponse(Response.play);
+				response.setResponseCode(ResponseCode.play);
 				for (CardInfo i : gameinfo.getKarten()) {
 					if (i.getPosition() == gameinfo.getPosition() && i.getLocation() == 1) {
 						response.setGespielteKarte(i.getKarte());

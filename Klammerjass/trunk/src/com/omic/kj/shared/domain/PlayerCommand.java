@@ -8,8 +8,8 @@ public class PlayerCommand {
 	private int playerCommandId;
 	private int playerId;
 	private int gameId;
-	private Command command;
-  private Response[] allowedResponse;
+	private CommandCode commandCode;
+  private ResponseCode[] allowedResponse;
   private String message;
   /** Karte 1 vom Stapel, Frage ob diese Farbe gespielt werden soll */
   private Farbe ersteKarte;
@@ -29,16 +29,11 @@ public class PlayerCommand {
 	public void setPlayerCommandId(int playerCommandId) {
 		this.playerCommandId = playerCommandId;
 	}
-	public Command getCommand() {
-		return command;
-	}
-	public void setCommand(Command command) {
-		this.command = command;
-	}
-	public Response[] getAllowedResponse() {
+	
+	public ResponseCode[] getAllowedResponse() {
 		return allowedResponse;
 	}
-	public void setAllowedResponse(Response[] allowedResponse) {
+	public void setAllowedResponse(ResponseCode[] allowedResponse) {
 		this.allowedResponse = allowedResponse;
 	}
 	public String getMessage() {
@@ -73,8 +68,14 @@ public class PlayerCommand {
 	}
 	@Override
 	public String toString() {
-		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", gameId=" + gameId + ", command=" + command + ", allowedResponse=" + Arrays.toString(allowedResponse)
+		return "PlayerCommand [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", gameId=" + gameId + ", command=" + getCommandCode() + ", allowedResponse=" + Arrays.toString(allowedResponse)
 				+ ", message=" + message + ", ersteKarte=" + ersteKarte + ", playerInfo=" + playerInfo + ", gameInfo=" + gameInfo + "]";
+	}
+	public CommandCode getCommandCode() {
+		return commandCode;
+	}
+	public void setCommandCode(CommandCode commandCode) {
+		this.commandCode = commandCode;
 	}
 	
 }

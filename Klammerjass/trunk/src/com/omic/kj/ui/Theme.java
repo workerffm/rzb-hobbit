@@ -1,4 +1,4 @@
-package com.omic.kj.test.ui;
+package com.omic.kj.ui;
 
 import java.awt.Color;
 import java.awt.Font;
