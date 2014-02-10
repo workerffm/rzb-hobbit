@@ -1,7 +1,7 @@
 package com.omic.kj.shared.domain;
 
 /** Anweisung an Spieler */
-public enum Command {
+public enum CommandCode {
 	playerinfo,
 	roundinfo,
 	say, 

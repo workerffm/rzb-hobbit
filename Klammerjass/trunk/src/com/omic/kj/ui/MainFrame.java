@@ -1,13 +1,14 @@
-package com.omic.kj.test.ui;
+package com.omic.kj.ui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import javax.swing.*;
 import javax.swing.border.*;
 import layout.TableLayout;
 
-public class MainFrame extends JFrame {
+class MainFrame extends JFrame {
 
 	CardLayout cardLayout;
 	JPanel cardPanel;
@@ -16,8 +17,9 @@ public class MainFrame extends JFrame {
 		super();
 	}
 
-	public void start() {
+	public void start() throws Exception {
 		setTitle("Klammerjass V0.2");
+		/*
 		cardLayout = new CardLayout();
 		cardPanel = new JPanel(cardLayout);
 		cardPanel.add("intro", createIntroScreen());
@@ -25,7 +27,11 @@ public class MainFrame extends JFrame {
 		cardPanel.add("game", createGameScreen());
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(cardPanel);
-		setSize(1000, 800);
+		*/
+		getContentPane().add(new GameDesk());
+		pack();
+		setSize(800, 800);
+		setResizable(false);
 		setVisible(true);
 	}
 

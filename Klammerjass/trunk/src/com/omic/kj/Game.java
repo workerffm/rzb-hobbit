@@ -106,7 +106,7 @@ final class Game {
 			}
 			log.info("State=" + state + ", event=" + event);
 
-			if (event.getEvent() == Event.gostate) {
+			if (event.getEvent() == EventType.gostate) {
 				state = event.getState();
 			}
 
@@ -156,160 +156,160 @@ final class Game {
 			// -----------------------------------------------------------
 			case G2: {
 				Player p = getPlayerLeftFromGeber(+1);
-				sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+				sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 				state = GameState.G3;
 				break;
 			}
 			// -----------------------------------------------------------
 			case G3: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+2);
-						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G4;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G4: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+3);
-						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G5;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G5: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+0);
-						sendPlayerCommand(p, Command.frageOriginal, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G6;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G6: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+1);
-						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G7;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G7: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+2);
-						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G8;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+1);
-						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
 						state = GameState.G11;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G8: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+3);
-						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G9;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+2);
-						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
 						state = GameState.G12;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G9: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+0);
-						sendPlayerCommand(p, Command.frageKleines, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.G10;
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+3);
-						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
 						state = GameState.G13;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
 			}
 			// -----------------------------------------------------------
 			case G10: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.nein) {
+					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						gotoGameState(GameState.GOV);
-					} else if (response.getResponse() == Response.ja) {
+					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+0);
-						sendPlayerCommand(p, Command.frageTrumpffarbe, new Response[] { Response.waehleFarbe });
+						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
 						state = GameState.G14;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -319,15 +319,15 @@ final class Game {
 			case G12:
 			case G13:
 			case G14: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.waehleFarbe) {
+					if (response.getResponseCode() == ResponseCode.waehleFarbe) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = response.getFarbe();
 						originalSelected = false;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponse());
+						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -340,7 +340,7 @@ final class Game {
 					final PlayCard trumpf7 = getCard(trumpfFarbe, Kartenwert.Sieben);
 					final Player trumpf7_owner = trumpf7.getOwner();
 					if (trumpf7_owner != null && !original.equals(trumpf7)) {
-						sendPlayerCommand(trumpf7_owner, Command.tauscheSieben, new Response[] { Response.ja, Response.nein });
+						sendPlayerCommand(trumpf7_owner, CommandCode.tauscheSieben, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
 						state = GameState.X1;
 					}
 				} else {
@@ -371,14 +371,14 @@ final class Game {
 				final PlayRound r = getCurrentRound();
 				Player p = getPlayerLeftFromAufspieler(r.getCurrentPosition() - 1);
 				gotoGameState(GameState.S3);
-				sendPlayerCommand(p, Command.spieleKarte, new Response[] { Response.play });
+				sendPlayerCommand(p, CommandCode.spieleKarte, new ResponseCode[] { ResponseCode.play });
 				break;
 			}
 			// -----------------------------------------------------------
 			case S3: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.play) {
+					if (response.getResponseCode() == ResponseCode.play) {
 
 						final PlayCard c = getCard(response.getGespielteKarte());
 						final Player p = getPlayerById(response.getPlayerId());
@@ -442,9 +442,9 @@ final class Game {
 			}
 			// -----------------------------------------------------------
 			case X1: {
-				if (event.getEvent() == Event.player) {
+				if (event.getEvent() == EventType.player) {
 					final PlayerResponse response = event.getPlayerResponse();
-					if (response.getResponse() == Response.ja) {
+					if (response.getResponseCode() == ResponseCode.ja) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Tausche die 7!");
 						PlayCard trumpf7 = getCard(trumpfFarbe, Kartenwert.Sieben);
 						PlayCard changeCard = getCard(trumpfFarbe, original.getWert());
@@ -540,7 +540,7 @@ final class Game {
 	}
 
 	private void gotoGameState(GameState state) {
-		GameEvent e = new GameEvent(Event.gostate, state);
+		GameEvent e = new GameEvent(EventType.gostate, state);
 		eventQueue.add(e);
 	}
 
@@ -592,7 +592,7 @@ final class Game {
 		final PlayerCommand pc = new PlayerCommand();
 		pc.setPlayerId(p.getId());
 		pc.setGameId(gameId);
-		pc.setCommand(Command.say);
+		pc.setCommandCode(CommandCode.say);
 		pc.setMessage(message);
 		this.commandListener.toPlayer(pc);
 	}
@@ -601,16 +601,16 @@ final class Game {
 		final PlayerCommand pc = new PlayerCommand();
 		pc.setPlayerId(p.getId());
 		pc.setGameId(gameId);
-		pc.setCommand(Command.playerinfo);
+		pc.setCommandCode(CommandCode.playerinfo);
 		pc.setInfo(buildPlayerInfo(p));
 		this.commandListener.toPlayer(pc);
 	}
 
-	private void sendPlayerCommand(Player p, Command command, Response[] allowedResponse) {
+	private void sendPlayerCommand(Player p, CommandCode command, ResponseCode[] allowedResponse) {
 		final PlayerCommand pc = new PlayerCommand();
 		pc.setPlayerId(p.getId());
 		pc.setGameId(gameId);
-		pc.setCommand(command);
+		pc.setCommandCode(command);
 		pc.setInfo(buildPlayerInfo(p));
 		pc.setAllowedResponse(allowedResponse);
 		pc.setErsteKarte(original.getFarbe());
@@ -689,7 +689,7 @@ final class Game {
 	private void sayHello() {
 		for (Player p : player) {
 			PlayerCommand cmd = new PlayerCommand();
-			cmd.setCommand(Command.say);
+			cmd.setCommandCode(CommandCode.say);
 			cmd.setMessage("hello world!");
 			cmd.setPlayerId(p.getId());
 			commandListener.toPlayer(cmd);
@@ -737,7 +737,7 @@ final class Game {
 
 	public void stopGame() {
 		GameEvent e = new GameEvent();
-		e.setEvent(Event.stop);
+		e.setEvent(EventType.stop);
 		this.eventQueue.add(e);
 	}
 
@@ -747,7 +747,7 @@ final class Game {
 
 	public void onPlayerResponse(PlayerResponse response) {
 		GameEvent e = new GameEvent();
-		e.setEvent(Event.player);
+		e.setEvent(EventType.player);
 		e.setPlayerResponse(response);
 		this.eventQueue.add(e);
 	}

@@ -2,21 +2,24 @@ package com.omic.kj;
 
 import com.omic.kj.shared.domain.PlayerResponse;
 
+/**
+ * Gamecontroller event, contains next state for FSM or response from a player.
+ */
 class GameEvent {
-  private Event event;
+  private EventType event;
   private PlayerResponse playerResponse;
 	private GameState state;
   
-	public GameEvent(Event event, GameState state) {
+	public GameEvent(EventType event, GameState state) {
 		this.event = event;
 		this.setState(state);
 	}
 	public GameEvent() {
 	}
-	public Event getEvent() {
+	public EventType getEvent() {
 		return event;
 	}
-	public void setEvent(Event event) {
+	public void setEvent(EventType event) {
 		this.event = event;
 	}
 	public PlayerResponse getPlayerResponse() {

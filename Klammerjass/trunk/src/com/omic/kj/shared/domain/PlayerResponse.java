@@ -9,7 +9,7 @@ package com.omic.kj.shared.domain;
 public class PlayerResponse {
 	private int playerCommandId;
 	private int playerId;
-  private Response response;
+  private ResponseCode responseCode;
   private Farbe farbe;
   private Karte gespielteKarte;
   
@@ -19,11 +19,11 @@ public class PlayerResponse {
 	public void setPlayerId(int playerId) {
 		this.playerId = playerId;
 	}
-	public Response getResponse() {
-		return response;
+	public ResponseCode getResponseCode() {
+		return responseCode;
 	}
-	public void setResponse(Response response) {
-		this.response = response;
+	public void setResponseCode(ResponseCode response) {
+		this.responseCode = response;
 	}
 	public Farbe getFarbe() {
 		return farbe;
@@ -40,7 +40,7 @@ public class PlayerResponse {
 	}
 	@Override
 	public String toString() {
-		return "PlayerResponse [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", response=" + response + ", farbe=" + farbe + ", gespielteKarte=" + gespielteKarte + "]";
+		return "PlayerResponse [playerCommandId=" + playerCommandId + ", playerId=" + playerId + ", response=" + responseCode + ", farbe=" + farbe + ", gespielteKarte=" + gespielteKarte + "]";
 	}
 	
 }
