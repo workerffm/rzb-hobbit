@@ -1,18 +1,17 @@
 package com.omic.kj.ui;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.ui.CardArea.Style;
+import com.omic.kj.ui.CardEvent.CardListener;
 
-public class GameDesk extends JPanel {
+public class GameDesk extends JPanel implements CardListener {
 
 	private final Logger log = Logger.getLogger("UI");
 	
@@ -36,24 +35,26 @@ public class GameDesk extends JPanel {
 		//add (new PSpace());
 		//setPreferredSize(new Dimension(500, 500));
   
-		p1 = new CardArea();
+		p1 = new CardArea(this);
 		p1.setStyle(Style.HAND);
 		p1.setHidden(false);
+		p1.addCardListener(this);
+		p1.setExposeSelectedCard(true);
 		
-		p2 = new CardArea();
+		p2 = new CardArea(this);
 		p2.setStyle(Style.HAND);
 		p2.setHidden(!true);
 		p2.addCard(Karte.Karo10);
 		p2.addCard(Karte.KaroD);
 		p2.addCard(Karte.Pik10);
 		
-		p3 = new CardArea();
+		p3 = new CardArea(this);
 		p3.setStyle(Style.HAND);
 		p3.setHidden(!true);
 		p3.addCard(Karte.Pik8);
 		p3.addCard(Karte.Pik7);
 		
-		p4 = new CardArea();
+		p4 = new CardArea(this);
 		p4.setStyle(Style.HAND);
 		p4.setHidden(!true);
 		p4.addCard(Karte.Kreuz10);
@@ -63,6 +64,10 @@ public class GameDesk extends JPanel {
 		p4.addCard(Karte.Herzk);
 		p4.addCard(Karte.Karo9);
 
+		add (new JButton ("Test"));
+	 //add(p1);
+		
+		
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -89,6 +94,7 @@ public class GameDesk extends JPanel {
 	
 	@Override
 	public void paint(Graphics g) {
+		super.paint(g);
 		final Dimension d = getSize();
 		final Graphics2D g2 = (Graphics2D) g;
 		g2.rotate(0,0,0);
@@ -111,6 +117,13 @@ public class GameDesk extends JPanel {
 		  p4.setLocation(new Point(d.width/2,d.height));
 			p4.paint(g2);
 		}
+	}
+
+
+	@Override
+	public void cardChanged(final CardEvent event) {
+		log.info (event.toString());
+		repaint();
 	}
 	
 }
