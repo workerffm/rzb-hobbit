@@ -143,10 +143,9 @@ final class Game {
 			// -----------------------------------------------------------
 			case G1a: {
 				// 3 Karten für jeden
-				original = null;
 				for (int i = 0; i < 3; i++) {
 					for (Player p : player) {
-						assignFreeCardToPlayer(p, p.getId() == this.geber.getId());
+						assignFreeCardToPlayer(p, false);
 					}
 				}
 				sendPlayerInfo();
@@ -642,23 +641,25 @@ final class Game {
 			ci.setOffen(pc.getOwner() != null && !pc.getOwner().isComputer());
 			ci.setPosition(pc.getOwner() != null ? pc.getOwner().getPosition() : 0);
 
-			int location = 0; // Karte bereits gespielt
+			CardPlace location = CardPlace.Invisible; // Karte bereits gespielt
 
+			 //0=bereits gespielt/nicht sichtbar, 1=auf Hand, 2=Original, 3=Stich, 4=Stapel
+			
 			if (pc.equals(original)) {
-				if (state == GameState.G2 || state == GameState.G3 || state == GameState.G4 || state == GameState.G5) {
-					location = 2; // Aufgedeckt vor dem Spieler anzeigen
-				}
+				//if (state == GameState.G2 || state == GameState.G3 || state == GameState.G4 || state == GameState.G5) {
+					location = CardPlace.Original; // Aufgedeckt vor dem Spieler anzeigen
+				//}
 			}
-			if (location == 0 && isCardInCurrentRound(pc)) {
-				location = 3; // im aktuellen Stich
+			if (location == CardPlace.Invisible && isCardInCurrentRound(pc)) {
+				location = CardPlace.Bid; // im aktuellen Stich
 			}
-			if (location == 0 && pc.getOwner() == null) {
-				location = 4; // im Stapel
+			if (location == CardPlace.Invisible && pc.getOwner() == null) {
+				location = CardPlace.Stock; // im Stapel
 			}
-			if (location == 0 && pc.getOwner() != null && pc.getRoundNr() == 0) {
-				location = 1; // Hand, nicht gespielt
+			if (location == CardPlace.Invisible && pc.getOwner() != null && pc.getRoundNr() == 0) {
+				location = CardPlace.Hand; // Hand, nicht gespielt
 			}
-			ci.setLocation(location);
+			ci.setCardPlace(location);
 			playercards.add(ci);
 		}
 		return playercards;

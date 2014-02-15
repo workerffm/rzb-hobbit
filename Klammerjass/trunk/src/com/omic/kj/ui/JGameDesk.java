@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.Farbe;
 import com.omic.kj.shared.domain.Karte;
 
@@ -40,7 +41,11 @@ public class JGameDesk extends JPanel {
 		statusPanel.setRunde(runde+"");
 	}
 
-	public void setCards(int position, List<Karte> cards) {
-		cardDesk.setCards (position, cards);
+	public void setCards(int deskPlaceId, List<CardInfo> cards) {
+		cardDesk.setCards (deskPlaceId, cards);
+	}
+
+	public void setOriginalPosition(int originalPosition) {
+		cardDesk.setOriginalPosition(originalPosition);
 	}
 }
