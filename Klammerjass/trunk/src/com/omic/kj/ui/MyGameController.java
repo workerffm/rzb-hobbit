@@ -68,6 +68,7 @@ class MyGameController implements PlayerCommandListener {
 			}
 			case spieleKarte: {
 				playerInfo = command.getInfo();
+				showInfo();
 				PlayerResponse response = new PlayerResponse();
 				response.setPlayerId(playerInfo.getPlayerId());
 				response.setResponseCode(ResponseCode.play);
