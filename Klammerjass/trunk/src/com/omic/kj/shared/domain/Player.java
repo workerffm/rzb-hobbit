@@ -7,7 +7,7 @@ public class Player extends User {
 	private boolean spielbereit;
 	/** current points of player */
 	private int points; 
-	/** Position on table */
+	/** Position on table : 1-4 */
 	private int position;
 	/** is computer player */
 	private boolean computer;
