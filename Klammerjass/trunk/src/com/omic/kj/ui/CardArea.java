@@ -39,6 +39,7 @@ public final class CardArea {
 
 	private final int BORDER = 10;
 	private final int EXPOSE_OFFSET = 21;
+	private final int CROSS_OFFSET = 45;
 	private final double overlapp = .4d; // x% overlapp to next card
 
 	private boolean hidden;
@@ -52,6 +53,7 @@ public final class CardArea {
 	private final Dimension cardDimension;
 	private final List<Entry<Rectangle, Karte>> cardAreas;
 	private final Set<CardListener> listeners;
+	private double crossRotation;
 
 	CardArea(final JComponent owner) {
 		super();
@@ -125,8 +127,9 @@ public final class CardArea {
 					} else {
 						img = CardImageCache.getImage(card);
 					}
-					g.rotate(Math.toRadians(5), x, y);
-					g.drawImage(img, imgx, imgy, null);
+					final int p = ci.getPosition();
+					g.rotate(crossRotation, x, y);
+					g.drawImage(img, imgx+CROSS_OFFSET, imgy+CROSS_OFFSET, null);
 				}
 				// !! Reset transformation !!
 				g.setTransform(saveAT);
@@ -155,6 +158,7 @@ public final class CardArea {
 
 	public void clearCards() {
 		this.cards.clear();
+		this.crossRotation = Math.toRadians(50+(5-Math.random()*10));
 	}
 
 	public void addCard(CardInfo k) {
