@@ -6,7 +6,7 @@ package com.omic.kj.shared.domain;
 public class CardInfo {
   private Karte karte;
 	private boolean offen;
-	private int position;  //spieler position
+	private int position;  //1-4 spieler position
 	private int location;  //0=bereits gespielt/nicht sichtbar, 1=auf Hand, 2=Original, 3=Stich, 4=Stapel
 	
   public Karte getKarte() {

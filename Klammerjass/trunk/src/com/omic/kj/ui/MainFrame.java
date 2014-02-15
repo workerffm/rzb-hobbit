@@ -1,24 +1,38 @@
 package com.omic.kj.ui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import javax.swing.*;
-import javax.swing.border.*;
+import java.text.Format;
+import java.text.NumberFormat;
+import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import com.omic.kj.shared.domain.GameSettings;
 import layout.TableLayout;
 
 class MainFrame extends JFrame {
 
 	CardLayout cardLayout;
 	JPanel cardPanel;
+	private JGameDesk gamedesk;
+	private JTextField tfName, tfGegner, tfPunkte;
 
 	MainFrame() {
 		super();
 	}
 
 	public void start() throws Exception {
-		setTitle("Klammerjass V0.2");
+		setTitle("Klammerjass V0.3");
 		/*
 		cardLayout = new CardLayout();
 		cardPanel = new JPanel(cardLayout);
@@ -28,11 +42,16 @@ class MainFrame extends JFrame {
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(cardPanel);
 		*/
-		getContentPane().add(new GameDesk());
+
+		gamedesk = new JGameDesk();
+		getContentPane().setLayout(new BorderLayout());
+		getContentPane().add(gamedesk);
 		pack();
 		setSize(800, 800);
-		setResizable(false);
+		setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
 		setVisible(true);
+		
+		startGame();
 	}
 
 	/**
@@ -43,7 +62,7 @@ class MainFrame extends JFrame {
 
 		final JPanel p = new JPanel();
 		Theme.style3(p);
-		
+
 		p.setLayout(new GridLayout(3, 1, 20, 20));
 		p.setBorder(new EmptyBorder(50, 50, 50, 50));
 
@@ -68,21 +87,30 @@ class MainFrame extends JFrame {
 	private Component createOptionsScreen() {
 		JPanel p = new JPanel();
 		Theme.style3(p);
-		
+
 		TableLayout tl = new TableLayout(new double[][]//col/row
 				{ { 50, TableLayout.PREFERRED, 20, TableLayout.FILL, 50 }, //
-				{ 50, TableLayout.PREFERRED, 50, TableLayout.PREFERRED, 50, TableLayout.PREFERRED, 50, TableLayout.FILL, 50 } });
+						{ 50, TableLayout.PREFERRED, 50, TableLayout.PREFERRED, 50, TableLayout.PREFERRED, 50, TableLayout.FILL, 50 } });
 		p.setLayout(tl);
 
 		final JLabel lName, lGegner, lPunkte;
-		final JTextField tfName, tfGegner, tfPunkte;
+	
 		final JButton btnOk;
 		lName = new JLabel("Dein Name:");
 		lGegner = new JLabel("Mitspieler:");
 		lPunkte = new JLabel("Max. Punkte:");
 		tfName = new JTextField();
-		tfGegner = new JTextField("3");
-		tfPunkte = new JTextField("300");
+		
+		final NumberFormat fGegner = NumberFormat.getIntegerInstance();
+		fGegner.setMinimumIntegerDigits(3);
+		fGegner.setMaximumIntegerDigits(3);
+		tfGegner = new JFormattedTextField(fGegner);
+		
+		final NumberFormat fPunkte = NumberFormat.getIntegerInstance();
+		fPunkte.setMinimumIntegerDigits(300);
+		fPunkte.setMaximumIntegerDigits(3000);
+		tfPunkte = new JFormattedTextField(fPunkte);
+
 		btnOk = new JButton("Weiter");
 		JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		btnPanel.add(Theme.style1(btnOk));
@@ -93,7 +121,7 @@ class MainFrame extends JFrame {
 		p.add(Theme.style2(tfName), "3,1");
 		p.add(Theme.style2(tfGegner), "3,3");
 		p.add(Theme.style2(tfPunkte), "3,5");
-		p.add(Theme.style3(btnPanel),"1,7,3,7");
+		p.add(Theme.style3(btnPanel), "1,7,3,7");
 		return p;
 	}
 
@@ -105,6 +133,23 @@ class MainFrame extends JFrame {
 		return p;
 	}
 
+	private void startGame() {
+		try {
+			//GameSettings settings = new GameSettings(true, getInt(tfGegner), getInt(tfPunkte));
+			final GameSettings settings = new GameSettings(true, 3,222);
+
+			final MyGameController g = new MyGameController();
+			g.setGameDesk(this.gamedesk);
+			g.run(settings);
+			
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private int getInt(JTextField tf) {
+		return Integer.parseInt(tf.getText());
+	}
 
 	// ---------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------
