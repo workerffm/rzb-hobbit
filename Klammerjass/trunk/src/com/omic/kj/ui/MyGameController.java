@@ -10,7 +10,6 @@ import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.CardPlace;
 import com.omic.kj.shared.domain.GameSettings;
-import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerCommand;
 import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.shared.domain.PlayerResponse;
@@ -98,7 +97,7 @@ class MyGameController implements PlayerCommandListener {
 			if (c.getCardPlace() == CardPlace.Bid)
 				deskPlaceId = 5;
 			else if (c.getCardPlace() == CardPlace.Stock)
-				deskPlaceId = 6;
+				deskPlaceId = 0; //dont show STOCK ! // 6;
 			else if (c.getCardPlace() == CardPlace.Original) {
 				deskPlaceId = 7;
 				originalPosition = c.getPosition();
