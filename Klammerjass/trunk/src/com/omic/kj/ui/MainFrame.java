@@ -47,7 +47,7 @@ class MainFrame extends JFrame {
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(gamedesk);
 		pack();
-		setSize(800, 800);
+		setSize(900,900);
 		setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
 		setVisible(true);
 		

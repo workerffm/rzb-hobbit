@@ -4,10 +4,11 @@ package com.omic.kj.shared.domain;
  * used for client side rendering
  */
 public class CardInfo {
+	
   private Karte karte;
+  private CardPlace cardPlace;
 	private boolean offen;
 	private int position;  //1-4 spieler position
-	private int location;  //0=bereits gespielt/nicht sichtbar, 1=auf Hand, 2=Original, 3=Stich, 4=Stapel
 	
   public Karte getKarte() {
 		return karte;
@@ -27,15 +28,19 @@ public class CardInfo {
 	public void setPosition(int position) {
 		this.position = position;
 	}
-	public int getLocation() {
-		return location;
+	
+	public CardPlace getCardPlace() {
+		return cardPlace;
 	}
-	public void setLocation(int location) {
-		this.location = location;
+	public void setCardPlace(CardPlace cardPlace) {
+		this.cardPlace = cardPlace;
 	}
+	
+
 	@Override
 	public String toString() {
-		return "CardInfo [karte=" + karte + ", offen=" + offen + ", position=" + position + ", location=" + location + "]";
+		return "CardInfo [karte=" + karte + ", offen=" + offen + ", position=" + position + ", cardPlace=" + cardPlace + "]";
 	}
+
 	
 }
