@@ -9,12 +9,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -24,15 +24,15 @@ import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.ui.CardEvent.CardListener;
 import com.omic.kj.ui.CardEvent.ChangeType;
 
-public final class CardArea  {
+public final class CardArea {
 
 	private final Logger log = Logger.getLogger("UI");
 
 	public enum Style {
 		/** Alle Karten übereinander */
-		STACK, 
+		STACK,
 		/** Alle Karten etwas versetzt im Kreis, a  lá Stich */
-		CROSS, 
+		CROSS,
 		/** Alle Karten in einer Reihe */
 		ROW
 	};
@@ -50,7 +50,7 @@ public final class CardArea  {
 	private final JComponent owner;
 	private final List<CardInfo> cards;
 	private final Dimension cardDimension;
-	private final Map<Rectangle, Karte> cardAreas;
+	private final List<Entry<Rectangle, Karte>> cardAreas;
 	private final Set<CardListener> listeners;
 
 	CardArea(final JComponent owner) {
@@ -58,11 +58,9 @@ public final class CardArea  {
 		this.owner = owner;
 		cards = new ArrayList<>();
 		listeners = new HashSet<>();
-		cardAreas = new HashMap<>();
+		cardAreas = new ArrayList<>();
 		cardDimension = CardImageCache.getCardDimension();
 	}
-
-	
 
 	public void paint(Graphics2D g) {
 		if (getLocation() != null && cards.size() > 0) {
@@ -90,16 +88,16 @@ public final class CardArea  {
 
 					// Track area for mouse over events:
 					final Rectangle r = new Rectangle(new Point(imgx, imgy), cardDimension);
-					cardAreas.put(r, card);
+					cardAreas.add(0, new AbstractMap.SimpleImmutableEntry<>(r, card));
 					//log.info("selected card: "+selectedCard);
 					imgx += step;
 				}
-			}   // ROW
-			
+			} // ROW
+
 			else if (getStyle() == Style.STACK) {
-				
-				int imgx =  x - cardDimension.width /2 ;
-				int imgy =  y - cardDimension.height / 2;
+
+				int imgx = x - cardDimension.width / 2;
+				int imgy = y - cardDimension.height / 2;
 				for (int n = 0; n < cards.size(); n++) {
 					final CardInfo ci = cards.get(n);
 					final Karte card = ci.getKarte();
@@ -111,14 +109,13 @@ public final class CardArea  {
 					}
 					g.drawImage(img, imgx, imgy, null);
 				}
-			}  // STACK
-			
+			} // STACK
 
 			else if (getStyle() == Style.CROSS) {
-				
+
 				final AffineTransform saveAT = g.getTransform();
-				int imgx =  x - cardDimension.width /2 ;
-				int imgy =  y - cardDimension.height / 2;
+				int imgx = x - cardDimension.width / 2;
+				int imgy = y - cardDimension.height / 2;
 				for (int n = 0; n < cards.size(); n++) {
 					final CardInfo ci = cards.get(n);
 					final Karte card = ci.getKarte();
@@ -128,25 +125,26 @@ public final class CardArea  {
 					} else {
 						img = CardImageCache.getImage(card);
 					}
-					g.rotate(Math.toRadians(5), x,y);
+					g.rotate(Math.toRadians(5), x, y);
 					g.drawImage(img, imgx, imgy, null);
 				}
-			  // !! Reset transformation !!
+				// !! Reset transformation !!
 				g.setTransform(saveAT);
-			}  // CROSS
-    }
+			} // CROSS
+		}
 
 	}
 
 	private Karte getSelectedCard(Point point) {
-		for (Rectangle r : cardAreas.keySet()) {
+		for (final Entry<Rectangle, Karte> e : cardAreas) {
+			Rectangle r = e.getKey();
 			if (r.contains(point)) {
-				return cardAreas.get(r);
+				return e.getValue();
 			}
 		}
 		return null;
 	}
-	
+
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -191,10 +189,8 @@ public final class CardArea  {
 		this.exposeSelectedCard = exposeSelectedCard;
 	}
 
-
-
 	// -- Listener & Event stuff --------------------------------------------------------------------
-	
+
 	public void addCardListener(final CardEvent.CardListener listener) {
 		owner.addMouseMotionListener(new MouseMotionListener() {
 			@Override
@@ -207,27 +203,22 @@ public final class CardArea  {
 			}
 
 			@Override
-			public void mouseDragged(MouseEvent e) {
-			}
+			public void mouseDragged(MouseEvent e) {}
 		});
-		
+
 		owner.addMouseListener(new MouseListener() {
 			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
-			
+			public void mouseReleased(MouseEvent e) {}
+
 			@Override
-			public void mousePressed(MouseEvent e) {
-			}
-			
+			public void mousePressed(MouseEvent e) {}
+
 			@Override
-			public void mouseExited(MouseEvent e) {
-			}
-			
+			public void mouseExited(MouseEvent e) {}
+
 			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
-			
+			public void mouseEntered(MouseEvent e) {}
+
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				Karte nowSelectedCard = getSelectedCard(e.getPoint());
@@ -239,13 +230,14 @@ public final class CardArea  {
 	}
 
 	protected void sendEvent(final CardEvent cardEvent) {
-    for (final CardListener l:listeners) {
-    	SwingUtilities.invokeLater(new Runnable(){
+		for (final CardListener l : listeners) {
+			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
 					l.cardChanged(cardEvent);
-				}});
-    }
+				}
+			});
+		}
 	}
 
 }

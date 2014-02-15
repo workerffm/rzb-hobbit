@@ -114,6 +114,8 @@ final class Game {
 
 			// -----------------------------------------------------------
 			case G0: {
+				originalSelected = false;
+				original = null;
 				nextRoundNr = 1;
 				selectGeber();
 				// 3 Karten für jeden
@@ -635,28 +637,28 @@ final class Game {
 
 	private Set<CardInfo> buildCardInfo() {
 		final Set<CardInfo> playercards = new HashSet<>();
-		for (PlayCard pc : playcards) {
-			CardInfo ci = new CardInfo();
-			ci.setKarte(pc.getKarte());
-			ci.setOffen(pc.getOwner() != null && !pc.getOwner().isComputer());
-			ci.setPosition(pc.getOwner() != null ? pc.getOwner().getPosition() : 0);
+		for (final PlayCard card : playcards) {
+			final CardInfo ci = new CardInfo();
+			ci.setKarte(card.getKarte());
+			ci.setOffen(card.getOwner() != null && !card.getOwner().isComputer());
+			ci.setPosition(card.getOwner() != null ? card.getOwner().getPosition() : 0);
 
 			CardPlace location = CardPlace.Invisible; // Karte bereits gespielt
 
 			 //0=bereits gespielt/nicht sichtbar, 1=auf Hand, 2=Original, 3=Stich, 4=Stapel
 			
-			if (pc.equals(original)) {
-				//if (state == GameState.G2 || state == GameState.G3 || state == GameState.G4 || state == GameState.G5) {
+			if (card.equals(original)) {
+				if (!originalSelected) {
 					location = CardPlace.Original; // Aufgedeckt vor dem Spieler anzeigen
-				//}
+				}
 			}
-			if (location == CardPlace.Invisible && isCardInCurrentRound(pc)) {
+			if (location == CardPlace.Invisible && isCardInCurrentRound(card)) {
 				location = CardPlace.Bid; // im aktuellen Stich
 			}
-			if (location == CardPlace.Invisible && pc.getOwner() == null) {
+			if (location == CardPlace.Invisible && card.getOwner() == null) {
 				location = CardPlace.Stock; // im Stapel
 			}
-			if (location == CardPlace.Invisible && pc.getOwner() != null && pc.getRoundNr() == 0) {
+			if (location == CardPlace.Invisible && card.getOwner() != null && card.getRoundNr() == 0) {
 				location = CardPlace.Hand; // Hand, nicht gespielt
 			}
 			ci.setCardPlace(location);
