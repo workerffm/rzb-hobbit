@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.omic.kj.local.LocalGameConnector;
 import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.CardPlace;
 import com.omic.kj.shared.domain.GameSettings;
+import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerCommand;
 import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.shared.domain.PlayerResponse;
@@ -20,13 +23,11 @@ class MyGameController implements PlayerCommandListener {
 
 	private final Logger log = Logger.getLogger("UI");
 
-	private JGameDesk gamedesk;
 	private LocalGameConnector connector;
+	private JGameDesk gamedesk;
 	private User user;
-
 	private PlayerInfo playerInfo;
 	private int maxPlayer;
-
 	private final Map<Integer, List<CardInfo>> cardsPerPlace;
 
 	MyGameController() {
@@ -47,41 +48,70 @@ class MyGameController implements PlayerCommandListener {
 
 	@Override
 	public void onMessage(PlayerCommand command) {
-
-		log.info(command.toString());
-
-		// Filter für user, bekommt immer alle Meldungen für alle Spieler !!
-
-		if (command.getPlayerId() == user.getId()) {
-			switch (command.getCommandCode()) {
-			case playerinfo: {
-				playerInfo = command.getInfo();
-				showInfo();
-				break;
+	  try {
+		  	
+			// General info
+			if (command.getInfo()!=null) {
+				this.playerInfo = command.getInfo();
+			  gamedesk.setUserInfo (this.playerInfo.getPosition(), this.playerInfo.getPlayerName());
 			}
-			case frageOriginal: {
-				PlayerResponse response = new PlayerResponse();
-				response.setPlayerId(playerInfo.getPlayerId());
-				response.setResponseCode(ResponseCode.ja);
-				connector.playerResponse(response);
-				break;
-			}
-			case spieleKarte: {
-				playerInfo = command.getInfo();
-				showInfo();
-				PlayerResponse response = new PlayerResponse();
-				response.setPlayerId(playerInfo.getPlayerId());
-				response.setResponseCode(ResponseCode.play);
-				for (CardInfo i : playerInfo.getKarten()) {
-					if (i.getPosition() == playerInfo.getPosition() && i.getCardPlace() == CardPlace.Hand) {
-						response.setGespielteKarte(i.getKarte());
+			
+			// Filter für user, bekommt immer alle Meldungen für alle Spieler !!
+			if (command.getPlayerId() == user.getId()) {
+	
+				log.info(command.toString());
+				
+				switch (command.getCommandCode()) {
+					case playerinfo: {
+						showInfo();
+						break;
+					}
+					case frageOriginal: {
+						showInfo();
+						ResponseCode responseCode = gamedesk.askUser(command.getErsteKarte()+" spielen?", command.getAllowedResponse());
+						PlayerResponse response = new PlayerResponse();
+						response.setPlayerId(playerInfo.getPlayerId());
+						response.setResponseCode(responseCode);
+						connector.playerResponse(response);
+						break;
+					}
+					case spieleKarte: {
+						showInfo();
+						Future<Karte> card = gamedesk.askForCard();
+						PlayerResponse response = new PlayerResponse();
+						response.setPlayerId(playerInfo.getPlayerId());
+	 					response.setResponseCode(ResponseCode.play);
+	 					response.setGespielteKarte(card.get());
+						connector.playerResponse(response);
+						break;
+					}
+					case frageBesser:
+						break;
+					case frageKleines:
+						break;
+					case frageTrumpffarbe:
+						break;
+					case roundinfo:
+						break;
+					case say:
+						break;
+					case tauscheSieben:
+						break;
+					case zeigeFuenfzig:
+						break;
+					case zeigeTerz:
+						break;
+					default:
+						break;
 					}
 				}
-				//connector.playerResponse(response);
-				break;
+			else {
+				showInfo();
 			}
-			}
-		}
+	  }
+	  catch (Exception x ) {
+	  	log.log(Level.SEVERE, "failed", x);
+	  }
 	}
 
 	private void showInfo() {
@@ -127,7 +157,7 @@ class MyGameController implements PlayerCommandListener {
 
 	private void pause() {
 		try {
-			Thread.sleep(400);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

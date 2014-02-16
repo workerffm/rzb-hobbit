@@ -10,7 +10,7 @@ public class PlayerInfo {
 	private int playerId;
 	private String gameName, playerName;
 	private int position, runde, punkte, spieler;
-	private boolean aktiv;
+	//private boolean aktiv;
 	//private boolean trumpfzeigen; // soll spieler die originalkarte offen zeigen?
 	private String geber, aufspieler;
 	private Farbe trumpf;
@@ -60,12 +60,7 @@ public class PlayerInfo {
 	public void setSpieler(int spieler) {
 		this.spieler = spieler;
 	}
-	public boolean isAktiv() {
-		return aktiv;
-	}
-	public void setAktiv(boolean aktiv) {
-		this.aktiv = aktiv;
-	}
+
 
 	public Farbe getTrumpf() {
 		return trumpf;
@@ -94,7 +89,7 @@ public class PlayerInfo {
 	@Override
 	public String toString() {
 		return "PlayerInfo [playerId=" + playerId + ", gameName=" + gameName + ", playerName=" + playerName + ", position=" + position + ", runde=" + runde + ", punkte=" + punkte + ", spieler=" + spieler
-				+ ", aktiv=" + aktiv + ", geber=" + geber + ", aufspieler=" + aufspieler + ", trumpf=" + trumpf + ", karten=" + karten + "]";
+				+ ", geber=" + geber + ", aufspieler=" + aufspieler + ", trumpf=" + trumpf + ", karten=" + karten + "]";
 	}
 
 	
