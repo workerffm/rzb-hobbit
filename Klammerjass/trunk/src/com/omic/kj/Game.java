@@ -118,6 +118,7 @@ final class Game {
 				original = null;
 				nextRoundNr = 1;
 				selectGeber();
+				sendGameInfo();
 				// 3 Karten für jeden
 				for (int i = 0; i < 3; i++) {
 					for (Player p : player) {
@@ -362,7 +363,7 @@ final class Game {
 					r.setCurrentPosition(1);
 					nextRoundNr++;
 					playrounds.add(r);
-
+          // Prepare next step and send out game info 
 					gotoGameState(GameState.S2);
 				}
 				break;
@@ -370,9 +371,12 @@ final class Game {
 			// -----------------------------------------------------------
 			case S2: {
 				final PlayRound r = getCurrentRound();
-				Player p = getPlayerLeftFromAufspieler(r.getCurrentPosition() - 1);
-				gotoGameState(GameState.S3);
+				// Nächster Spieler im Uhrzeigersinn:
+				final Player p = getPlayerLeftFromAufspieler(r.getCurrentPosition() - 1);
+				sendGameInfo(p.getPosition());
+				sendPlayerInfo();
 				sendPlayerCommand(p, CommandCode.spieleKarte, new ResponseCode[] { ResponseCode.play });
+				gotoGameState(GameState.S3);
 				break;
 			}
 			// -----------------------------------------------------------
@@ -465,10 +469,6 @@ final class Game {
 		}
 	}
 
-	private void sendGameInfo() {
-		// TODO Auto-generated method stub
-
-	}
 
 	/**
 		* - Stichgewinner ermitteln
@@ -583,6 +583,41 @@ final class Game {
 		throw new Exception("next player not found(2)");
 	}
 
+
+	/**
+	 * Distribute all player info to all other player
+	 */
+	private void sendGameInfo(int activePlayerPosition) {
+		final List<PlayerInfo> playerInfo = new ArrayList<PlayerInfo>(player.size());
+		// Collect info about all players
+		for (Player p : player) {
+		  playerInfo.add(buildPlayerInfo(p));
+		}
+		final GameInfo gameInfo = new GameInfo();
+		gameInfo.setPlayerInfo(playerInfo);
+		final PlayRound r = getCurrentRound();
+		gameInfo.setActivePlayerPosition(activePlayerPosition);
+		// Send to all players
+		for (Player p : player) {
+			final PlayerCommand pc = new PlayerCommand();
+			pc.setGameId(gameId);
+			pc.setCommandCode(CommandCode.gameinfo);
+			pc.setGameInfo(gameInfo);
+			pc.setPlayerId(p.getId());
+		  this.commandListener.toPlayer(pc);
+		}
+	}
+
+	private void sendGameInfo() {
+		// Select the active player from the current round, 
+		// if no round is active, set 0 for "no player is active."
+		final PlayRound r = getCurrentRound();
+		sendGameInfo(r!=null ? r.getCurrentPosition():0);
+	}
+	
+	/**
+	 * Distribute current player info to all other player
+	 */
 	private void sendPlayerInfo() {
 		for (Player p : player) {
 			sendPlayerInfo(p);
@@ -619,20 +654,19 @@ final class Game {
 	}
 
 	private PlayerInfo buildPlayerInfo(final Player p) {
-		final PlayerInfo i = new PlayerInfo();
-		i.setAufspieler(aufspieler != null ? aufspieler.getUsername() : "");
-		i.setGameName(gameName);
-		i.setGeber(geber != null ? geber.getUsername() : "");
-		i.setKarten(buildCardInfo());
-		//i.setAktiv(p.equals(aufspieler));
-		i.setPlayerId(p.getId());
-		i.setPlayerName(p.getUsername());
-		i.setPosition(p.getPosition());
-		i.setPunkte(p.getPoints());
 		final PlayRound r = getCurrentRound();
-		i.setRunde(r == null ? 0 : r.getNr());
-		i.setTrumpf(trumpfFarbe);
-		return i;
+		final PlayerInfo pi = new PlayerInfo();
+		pi.setAufspieler(aufspieler != null ? aufspieler.getUsername() : "");
+		pi.setGeber(geber != null ? geber.getUsername() : "");
+		pi.setActive(r!=null && r.getCurrentPosition()==p.getPosition());
+		pi.setKarten(buildCardInfo());
+		pi.setPlayerId(p.getId());
+		pi.setPosition(p.getPosition());
+		pi.setPunkte(p.getPoints());
+		pi.setName(p.getUsername());
+		pi.setRunde(r == null ? 0 : r.getNr());
+		pi.setTrumpf(trumpfFarbe);
+		return pi;
 	}
 
 	private Set<CardInfo> buildCardInfo() {

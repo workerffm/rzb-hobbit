@@ -1,6 +1,7 @@
 package com.omic.kj.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -8,18 +9,21 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import com.omic.kj.shared.domain.CardInfo;
-import com.omic.kj.shared.domain.Farbe;
+import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.Karte;
+import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.shared.domain.ResponseCode;
 
-public class JGameDesk extends JPanel {
+public class JGamePanel extends JPanel {
 
 	private final JStatusPanel statusPanel;
-	private final JCardDesk cardDesk;
+	private final JDeskPanel cardDesk;
 	private final JButton b1, b2, b3;
 
-	JGameDesk() {
+	JGamePanel() {
 		super(new BorderLayout());
+		
+		setBackground(Color.black);
 		statusPanel = new JStatusPanel();
 		b1 = new JButton("Bella");
 		b2 = new JButton("50");
@@ -35,16 +39,17 @@ public class JGameDesk extends JPanel {
 		playerPanel.add(btnPanel);
 		playerPanel.add(statusPanel, BorderLayout.SOUTH);
 		//JPanel p = new JPanel(new BorderLayout());
-		cardDesk = new JCardDesk(4);
+		cardDesk = new JDeskPanel(4);
 		add(cardDesk);
 		add(playerPanel, BorderLayout.SOUTH);
 	}
 
-	public void setStatus(String aufspieler, Farbe trumpf, int punkte, int runde) {
-		statusPanel.setAufspieler(aufspieler);
-		statusPanel.setTrumpf(trumpf != null ? trumpf.name() : "");
-		statusPanel.setPunkte(punkte + "");
-		statusPanel.setRunde(runde + "");
+	public void setStatus(PlayerInfo pi) {
+		statusPanel.setText(0,"Geber: "+pi.getGeber());
+		statusPanel.setText(1,"Aufspieler: "+pi.getAufspieler());
+		statusPanel.setText(2,pi.getTrumpf()!= null ? pi.getTrumpf().name()+" ist Trumpf" : "");
+		statusPanel.setText(3,pi.getRunde()>0 ? pi.getRunde() + ". Runde":"");
+		//cardDesk.setActivePosition (pi);
 	}
 
 	public void setCards(int deskPlaceId, List<CardInfo> cards) {
@@ -55,22 +60,21 @@ public class JGameDesk extends JPanel {
 		cardDesk.setOriginalPosition(position);
 	}
 
-	public void setUserInfo(int position, String playerName) {
-		cardDesk.setUserInfo(position, playerName);
-		b1.setEnabled(position==1);
-	  b2.setEnabled(position==1);
-	  b3.setEnabled(position==1);
-	}
-
-	public ResponseCode askUser(String message, ResponseCode[] allowedResponse) {
-    ResponseCode r;
-    int n = JOptionPane.showOptionDialog(this, message, "Frage", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, allowedResponse, null); 
-    r = allowedResponse[n];
-		return r;
-	}
-
 	public Future<Karte> askForCard() {
     return cardDesk.askForCard();		
 	}
+
+	public void setPlayerInfo(GameInfo gameInfo) {
+		cardDesk.setPlayerInfo (gameInfo.getPlayerInfo());
+		cardDesk.setActivePosition (gameInfo.getActivePlayerPosition());
+	}
+
+	public ResponseCode askUser(String message, ResponseCode[] allowedResponse) {
+    int n = JOptionPane.showOptionDialog(this, message, "Frage", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, allowedResponse, null); 
+    if (n<0) return null;
+    ResponseCode r = allowedResponse[n];
+		return r;
+	}
+
 
 }

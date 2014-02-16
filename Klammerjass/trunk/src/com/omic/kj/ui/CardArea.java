@@ -3,6 +3,7 @@ package com.omic.kj.ui;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -37,16 +38,17 @@ public final class CardArea {
 		ROW
 	};
 
-	private final int BORDER = 10;
+	//private final int BORDER =80;
 	private final int EXPOSE_OFFSET = 21;
 	private final int CROSS_OFFSET = 45;
-	private final double overlapp = .4d; // x% overlapp to next card
+	private final double overlapp = .45d; // x% overlapp to next card
 
 	private boolean hidden;
 	private boolean exposeSelectedCard;
 	private Style style;
 	private Karte selectedCard;
 	private Point location;
+	private Point offset;
 
 	private final JComponent owner;
 	private final List<CardInfo> cards;
@@ -72,7 +74,7 @@ public final class CardArea {
 			if (getStyle() == Style.ROW) {
 
 				final int step = (int) Math.round((1d - this.overlapp) * cardDimension.width);
-				int imgx = x - (step * cards.size()) / 2;
+				int imgx = x - (step * cards.size()) / 2 + (offset != null ? offset.x: 0);
 
 				cardAreas.clear();
 				for (int n = 0; n < cards.size(); n++) {
@@ -85,7 +87,7 @@ public final class CardArea {
 						img = CardImageCache.getImage(card);
 					}
 					final int selectOffset = (isExposeSelectedCard() && (card == this.selectedCard)) ? EXPOSE_OFFSET : 0;
-					final int imgy = y - cardDimension.height - BORDER - selectOffset;
+					final int imgy = y - cardDimension.height - selectOffset + (offset != null ? offset.y : 0);
 					g.drawImage(img, imgx, imgy, null);
 
 					// Track area for mouse over events:
@@ -129,7 +131,7 @@ public final class CardArea {
 					}
 					final int p = ci.getPosition();
 					g.rotate(crossRotation, x, y);
-					g.drawImage(img, imgx+CROSS_OFFSET, imgy+CROSS_OFFSET, null);
+					g.drawImage(img, imgx + CROSS_OFFSET, imgy + CROSS_OFFSET, null);
 				}
 				// !! Reset transformation !!
 				g.setTransform(saveAT);
@@ -158,7 +160,7 @@ public final class CardArea {
 
 	public void clearCards() {
 		this.cards.clear();
-		this.crossRotation = Math.toRadians(50+(5-Math.random()*10));
+		this.crossRotation = Math.toRadians(50 + (5 - Math.random() * 10));
 	}
 
 	public void addCard(CardInfo k) {
@@ -227,7 +229,9 @@ public final class CardArea {
 			public void mouseClicked(MouseEvent e) {
 				Karte nowSelectedCard = getSelectedCard(e.getPoint());
 				selectedCard = null;
-				sendEvent(new CardEvent(nowSelectedCard, ChangeType.CARD_CLICKED));
+				if(nowSelectedCard!=null) {
+				  sendEvent(new CardEvent(nowSelectedCard, ChangeType.CARD_CLICKED));
+				}
 			}
 		});
 		listeners.add(listener);
@@ -242,6 +246,14 @@ public final class CardArea {
 				}
 			});
 		}
+	}
+
+	public Point getOffset() {
+		return offset;
+	}
+
+	public void setOffset(Point offset) {
+		this.offset = offset;
 	}
 
 }

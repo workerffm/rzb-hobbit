@@ -3,22 +3,33 @@ package com.omic.kj.ui;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.Karte;
+import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.ui.CardArea.Style;
 import com.omic.kj.ui.CardEvent.CardListener;
 
-public class JCardDesk extends JComponent implements CardListener {
+public class JDeskPanel extends JComponent implements CardListener {
 
 	private final Logger log = Logger.getLogger("UI");
 
@@ -26,11 +37,15 @@ public class JCardDesk extends JComponent implements CardListener {
 	private final ExecutorService executor = Executors.newCachedThreadPool();
 
 	private final CardArea p1, p2, p3, p4, p5, p6, p7;
-	private final UserArea u1, u2, u3, u4;
+	private final PlayerArea u1, u2, u3, u4;
 	private int originalPosition;
 	private Karte selectedCard;
+	private final Image backgroundImage;
 
-	JCardDesk(int numberOfPlayer) {
+	JDeskPanel(int numberOfPlayer) {
+		super();
+		backgroundImage = getImage("/images/table.jpg");
+		
 		p1 = new CardArea(this);
 		p1.setStyle(Style.ROW);
 		p1.setHidden(false);
@@ -64,10 +79,56 @@ public class JCardDesk extends JComponent implements CardListener {
 		p7.setStyle(Style.STACK);
 		p7.setHidden(false);
 
-		u1 = new UserArea(this);
-		u2 = new UserArea(this);
-		u3 = new UserArea(this);
-		u4 = new UserArea(this);
+		Dimension d = new Dimension(100, 100);
+		u1 = new PlayerArea(this, d, 1);
+		u2 = new PlayerArea(this, d, 2);
+		u3 = new PlayerArea(this, d, 3);
+		u4 = new PlayerArea(this, d, 4);
+		//d = getSize();
+
+		//u1.setImage(getImage("/images/player1.png"));
+		u2.setImage(getImage("/images/player2.png"));
+		u3.setImage(getImage("/images/player3.png"));
+		u4.setImage(getImage("/images/player4.png"));
+
+		final MouseOnPlayerListener ml = new MouseOnPlayerListener();
+		ml.registerComponent(u2);
+		ml.registerComponent(u3);
+		ml.registerComponent(u4);
+		addMouseListener(ml);
+	}
+
+	final class MouseOnPlayerListener extends MouseAdapter {
+		private final Set<JComponent> playerAreas = new HashSet<>();
+
+		public void registerComponent(JComponent component) {
+			playerAreas.add(component);
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			for (final JComponent c : playerAreas) {
+				if (c.getBounds().contains(e.getPoint())) {
+					e.consume();
+					log.info("Clicked player: " + c);
+					return;
+				}
+			}
+			super.mouseClicked(e);
+		}
+
+	}
+
+	private Image getImage(String filename) {
+		try {
+			InputStream is = this.getClass().getResourceAsStream(filename);
+			BufferedImage img = ImageIO.read(is);
+			is.close();
+			return img;
+		} catch (IOException e) {
+			log.log(Level.WARNING, "Playerimage error", e);
+		}
+		return null;
 	}
 
 	@Override
@@ -104,26 +165,33 @@ public class JCardDesk extends JComponent implements CardListener {
 		super.paint(g);
 		final Dimension d = getSize();
 		final Graphics2D g2 = (Graphics2D) g;
+		
+		g.drawImage(backgroundImage,0,0,null);
+		
 		final AffineTransform saveAT = g2.getTransform();
 		g2.rotate(0, 0, 0);
 		//g2.scale(0.8, 0.8);
 		if (p1 != null) {
 			p1.setLocation(new Point(d.width / 2, d.height));
+			p1.setOffset(new Point(0, -5));
 			p1.paint(g2);
 		}
 		g2.rotate(Math.toRadians(90), d.width / 2, d.height / 2);
 		if (p2 != null) {
 			p2.setLocation(new Point(d.width / 2, d.height));
+			p2.setOffset(new Point(-30, -80));
 			p2.paint(g2);
 		}
 		g2.rotate(Math.toRadians(90), d.width / 2, d.height / 2);
 		if (p3 != null) {
 			p3.setLocation(new Point(d.width / 2, d.height));
+			p3.setOffset(new Point(0, -5));
 			p3.paint(g2);
 		}
 		g2.rotate(Math.toRadians(90), d.width / 2, d.height / 2);
 		if (p4 != null) {
 			p4.setLocation(new Point(d.width / 2, d.height));
+			p4.setOffset(new Point(-30, -80));
 			p4.paint(g2);
 		}
 		// !! Reset transformation !!
@@ -162,9 +230,9 @@ public class JCardDesk extends JComponent implements CardListener {
 		// User names
 		g2.setTransform(saveAT);
 		u1.setLocation(new Point(d.width - 100, d.height - 100));
-		u2.setLocation(new Point(10, d.height - 100));
-		u3.setLocation(new Point(10, 50));
-		u4.setLocation(new Point(d.width - 100, 50));
+		u2.setLocation(new Point(5, d.height / 2 - 50));
+		u3.setLocation(new Point(50, 20));
+		u4.setLocation(new Point(d.width - 105, d.height / 2 - 50));
 		u1.paint(g2);
 		u2.paint(g2);
 		u3.paint(g2);
@@ -202,20 +270,39 @@ public class JCardDesk extends JComponent implements CardListener {
 		this.originalPosition = originalPosition;
 	}
 
-	public void setUserInfo(int position, String playerName) {
-		u1.setActive(position == 1);
-		u2.setActive(position == 2);
-		u3.setActive(position == 3);
-		u4.setActive(position == 4);
-		if (position == 1)
-			u1.setName(playerName);
-		if (position == 2)
-			u2.setName(playerName);
-		if (position == 3)
-			u3.setName(playerName);
-		if (position == 4)
-			u4.setName(playerName);
-		//repaint();
+	public void setPlayerInfo(List<PlayerInfo> playerInfo) {
+		for (PlayerInfo pi : playerInfo) {
+			if (pi.getPosition() == 1) {
+				u1.setName(pi.getName() + " (" + pi.getPunkte() + ")");
+				//u1.setActive(pi.isActive());
+			} else if (pi.getPosition() == 2) {
+				u2.setName(pi.getName() + " (" + pi.getPunkte() + ")");
+				//u2.setActive(pi.isActive());
+			} else if (pi.getPosition() == 3) {
+				u3.setName(pi.getName() + " (" + pi.getPunkte() + ")");
+				//u3.setActive(pi.isActive());
+			} else if (pi.getPosition() == 4) {
+				u4.setName(pi.getName() + " (" + pi.getPunkte() + ")");
+				//u4.setActive(pi.isActive());
+			}
+		}
+		repaint();
+	}
+
+	public void setActivePosition(PlayerInfo pi) {
+//		u1.setActive(1 == pi.getPosition() && pi.isActive());
+//		u2.setActive(2 == pi.getPosition() && pi.isActive());
+//		u3.setActive(3 == pi.getPosition() && pi.isActive());
+//		u4.setActive(4 == pi.getPosition() && pi.isActive());
+//		repaint();
+	}
+
+	public void setActivePosition(int activePlayerPosition) {
+		u1.setActive(1 == activePlayerPosition);
+		u2.setActive(2 == activePlayerPosition);
+		u3.setActive(3 == activePlayerPosition);
+		u4.setActive(4 ==activePlayerPosition);
+		repaint();
 	}
 
 }
