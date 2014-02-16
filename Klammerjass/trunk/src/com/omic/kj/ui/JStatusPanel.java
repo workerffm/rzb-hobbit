@@ -30,16 +30,16 @@ public class JStatusPanel extends JPanel {
 	
 	
 	void setTrumpf(String s){
-		tf[1].setText("Trumpf ist "+s);
+		tf[1].setText(s+ " ist Trumpf");
 	}
 	void setAufspieler(String s){
 		tf[0].setText("Aufspieler: "+s);
 	}
 	void setPunkte(String s){
-		tf[2].setText(s+" Punkte");
+		tf[3].setText(s+" Punkte");
 	}
 	void setRunde(String s){
-		tf[3].setText("Runde "+s);
+		tf[2].setText("Runde "+s);
 	}
 	
 }

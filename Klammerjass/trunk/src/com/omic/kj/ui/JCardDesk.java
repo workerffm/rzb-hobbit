@@ -5,10 +5,16 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
 import com.omic.kj.shared.domain.CardInfo;
+import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.ui.CardArea.Style;
 import com.omic.kj.ui.CardEvent.CardListener;
 
@@ -16,9 +22,13 @@ public class JCardDesk extends JComponent implements CardListener {
 
 	private final Logger log = Logger.getLogger("UI");
 
-	private final CardArea p1, p2, p3, p4, p5, p6, p7;
+	private final Object selectCardMonitor = new Object();
+	private final ExecutorService executor = Executors.newCachedThreadPool();
 
+	private final CardArea p1, p2, p3, p4, p5, p6, p7;
+	private final UserArea u1, u2, u3, u4;
 	private int originalPosition;
+	private Karte selectedCard;
 
 	JCardDesk(int numberOfPlayer) {
 		p1 = new CardArea(this);
@@ -53,13 +63,40 @@ public class JCardDesk extends JComponent implements CardListener {
 		p7 = new CardArea(this);
 		p7.setStyle(Style.STACK);
 		p7.setHidden(false);
+
+		u1 = new UserArea(this);
+		u2 = new UserArea(this);
+		u3 = new UserArea(this);
+		u4 = new UserArea(this);
 	}
 
 	@Override
 	public void cardChanged(final CardEvent event) {
-		if (event.getEvent() == CardEvent.ChangeType.CARD_CLICKED)
+		if (event.getEvent() == CardEvent.ChangeType.CARD_CLICKED) {
 			log.info(event.toString());
+			synchronized (selectCardMonitor) {
+				selectedCard = event.getCard();
+				selectCardMonitor.notify();
+			}
+		}
 		repaint();
+	}
+
+	public Future<Karte> askForCard() {
+		final Callable<Karte> c = new Callable<Karte>() {
+			@Override
+			public Karte call() throws Exception {
+				synchronized (selectCardMonitor) {
+					selectedCard = null;
+					while (selectedCard == null) {
+						selectCardMonitor.wait();
+					}
+					return selectedCard;
+				}
+			}
+		};
+		Future<Karte> f = executor.submit(c);
+		return f;
 	}
 
 	@Override
@@ -96,7 +133,7 @@ public class JCardDesk extends JComponent implements CardListener {
 			p5.paint(g2);
 		}
 		if (p6 != null) {
-			p6.setLocation(new Point(10, d.height -150));
+			p6.setLocation(new Point(10, d.height - 150));
 			p6.paint(g2);
 		}
 		if (p7 != null) {
@@ -121,11 +158,23 @@ public class JCardDesk extends JComponent implements CardListener {
 			p7.setLocation(new Point(d.width / 2 + dx, d.height / 2 + dy));
 			p7.paint(g2);
 		}
+
+		// User names
+		g2.setTransform(saveAT);
+		u1.setLocation(new Point(d.width - 100, d.height - 100));
+		u2.setLocation(new Point(10, d.height - 100));
+		u3.setLocation(new Point(10, 50));
+		u4.setLocation(new Point(d.width - 100, 50));
+		u1.paint(g2);
+		u2.paint(g2);
+		u3.paint(g2);
+		u4.paint(g2);
 	}
 
 	public void setCards(int deskPlaceId, List<CardInfo> cards) {
 		if (deskPlaceId == 1) {
 			p1.clearCards();
+			Collections.sort(cards);
 			p1.addCards(cards);
 		} else if (deskPlaceId == 2) {
 			p2.clearCards();
@@ -151,6 +200,22 @@ public class JCardDesk extends JComponent implements CardListener {
 
 	public void setOriginalPosition(int originalPosition) {
 		this.originalPosition = originalPosition;
+	}
+
+	public void setUserInfo(int position, String playerName) {
+		u1.setActive(position == 1);
+		u2.setActive(position == 2);
+		u3.setActive(position == 3);
+		u4.setActive(position == 4);
+		if (position == 1)
+			u1.setName(playerName);
+		if (position == 2)
+			u2.setName(playerName);
+		if (position == 3)
+			u3.setName(playerName);
+		if (position == 4)
+			u4.setName(playerName);
+		//repaint();
 	}
 
 }

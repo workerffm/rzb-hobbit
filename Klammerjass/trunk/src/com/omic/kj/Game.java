@@ -624,7 +624,7 @@ final class Game {
 		i.setGameName(gameName);
 		i.setGeber(geber != null ? geber.getUsername() : "");
 		i.setKarten(buildCardInfo());
-		i.setAktiv(p.equals(aufspieler));
+		//i.setAktiv(p.equals(aufspieler));
 		i.setPlayerId(p.getId());
 		i.setPlayerName(p.getUsername());
 		i.setPosition(p.getPosition());
