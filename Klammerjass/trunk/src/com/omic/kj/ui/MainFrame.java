@@ -24,7 +24,7 @@ class MainFrame extends JFrame {
 
 	CardLayout cardLayout;
 	JPanel cardPanel;
-	private JGameDesk gamedesk;
+	private JGamePanel gamedesk;
 	private JTextField tfName, tfGegner, tfPunkte;
 
 	MainFrame() {
@@ -43,7 +43,7 @@ class MainFrame extends JFrame {
 		getContentPane().add(cardPanel);
 		*/
 
-		gamedesk = new JGameDesk();
+		gamedesk = new JGamePanel();
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(gamedesk);
 		pack();

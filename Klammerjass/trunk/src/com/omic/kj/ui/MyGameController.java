@@ -11,6 +11,7 @@ import com.omic.kj.local.LocalGameConnector;
 import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.CardPlace;
+import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.GameSettings;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerCommand;
@@ -24,9 +25,8 @@ class MyGameController implements PlayerCommandListener {
 	private final Logger log = Logger.getLogger("UI");
 
 	private LocalGameConnector connector;
-	private JGameDesk gamedesk;
+	private JGamePanel gamedesk;
 	private User user;
-	private PlayerInfo playerInfo;
 	private int maxPlayer;
 	private final Map<Integer, List<CardInfo>> cardsPerPlace;
 
@@ -34,14 +34,14 @@ class MyGameController implements PlayerCommandListener {
 		cardsPerPlace = new HashMap<>();
 	}
 
-	public void setGameDesk(JGameDesk gamedesk) {
+	public void setGameDesk(JGamePanel gamedesk) {
 		this.gamedesk = gamedesk;
 	}
 
 	void run(final GameSettings gameSettings) throws Exception {
 		maxPlayer = gameSettings.getComputerCount() + 1;
 		connector = LocalGameConnector.getConnector();
-		user = connector.login("markus", "xxx");
+		user = connector.login(System.getProperty("user.name"), "NO_PWD");
 		connector.addPlayerCommandListener(user, this);
 		connector.startGame(user, gameSettings);
 	}
@@ -50,36 +50,37 @@ class MyGameController implements PlayerCommandListener {
 	public void onMessage(PlayerCommand command) {
 	  try {
 		  	
-			// General info
-			if (command.getInfo()!=null) {
-				this.playerInfo = command.getInfo();
-			  gamedesk.setUserInfo (this.playerInfo.getPosition(), this.playerInfo.getPlayerName());
-			}
-			
 			// Filter für user, bekommt immer alle Meldungen für alle Spieler !!
 			if (command.getPlayerId() == user.getId()) {
 	
-				log.info(command.toString());
+				log.info("game command received: "+command.getCommandCode().toString());
 				
 				switch (command.getCommandCode()) {
+					case gameinfo: {
+						showGameInfo(command.getGameInfo());
+						break;
+					}
 					case playerinfo: {
-						showInfo();
+						final PlayerInfo info = command.getInfo();
+						showPlayerInfo(info);
 						break;
 					}
 					case frageOriginal: {
-						showInfo();
+						final PlayerInfo info = command.getInfo();
+						showPlayerInfo(info);
 						ResponseCode responseCode = gamedesk.askUser(command.getErsteKarte()+" spielen?", command.getAllowedResponse());
 						PlayerResponse response = new PlayerResponse();
-						response.setPlayerId(playerInfo.getPlayerId());
+						response.setPlayerId(info.getPlayerId());
 						response.setResponseCode(responseCode);
 						connector.playerResponse(response);
 						break;
 					}
 					case spieleKarte: {
-						showInfo();
+						final PlayerInfo info = command.getInfo();
+						showPlayerInfo(info);
 						Future<Karte> card = gamedesk.askForCard();
 						PlayerResponse response = new PlayerResponse();
-						response.setPlayerId(playerInfo.getPlayerId());
+						response.setPlayerId(info.getPlayerId());
 	 					response.setResponseCode(ResponseCode.play);
 	 					response.setGespielteKarte(card.get());
 						connector.playerResponse(response);
@@ -105,16 +106,19 @@ class MyGameController implements PlayerCommandListener {
 						break;
 					}
 				}
-			else {
-				showInfo();
-			}
 	  }
 	  catch (Exception x ) {
 	  	log.log(Level.SEVERE, "failed", x);
 	  }
 	}
 
-	private void showInfo() {
+	private void showGameInfo(GameInfo gameInfo) {
+		if(gameInfo!=null) {
+	    gamedesk.setPlayerInfo(gameInfo);
+		}
+	}
+
+	private void showPlayerInfo(final PlayerInfo info) {
 		
 		// Remove last card sortage
 		for (List<CardInfo> list : cardsPerPlace.values()) {
@@ -123,7 +127,7 @@ class MyGameController implements PlayerCommandListener {
 		
 		// Distribute the card to each place on the game desk
 		int originalPosition=0;
-		for (CardInfo c : playerInfo.getKarten()) {
+		for (CardInfo c : info.getKarten()) {
 			int deskPlaceId = 0;
 			if (c.getCardPlace() == CardPlace.Bid)
 				deskPlaceId = 5;
@@ -147,7 +151,7 @@ class MyGameController implements PlayerCommandListener {
 		}
 		
     // Now put the cards on the table....
-		gamedesk.setStatus(playerInfo.getAufspieler(), playerInfo.getTrumpf(), playerInfo.getPunkte(), playerInfo.getRunde());
+		gamedesk.setStatus(info);
 		gamedesk.setOriginalPosition (originalPosition);
 		for (Integer place : cardsPerPlace.keySet()) {
 			gamedesk.setCards (place, cardsPerPlace.get(place));
@@ -157,7 +161,7 @@ class MyGameController implements PlayerCommandListener {
 
 	private void pause() {
 		try {
-			Thread.sleep(100);
+			Thread.sleep(150);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

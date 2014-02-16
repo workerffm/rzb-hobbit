@@ -31,7 +31,7 @@ public class ComputerPlayer implements CommandListener {
 	@Override
 	public void toPlayer(PlayerCommand command) {
 		if (command.getPlayerId() == me.getId()) {
-			log.info(command + "");
+			//log.info(command + "");
 			switch (command.getCommandCode()) {
 			case playerinfo: {
 				gameinfo = command.getInfo();

@@ -110,7 +110,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 			newGame.joinGame(p,settings);
 			
 			for (int i=0; i < settings.getComputerCount();i++) {
-	  	  final Player coPlayer = createNewPlayer("Computer "+(1+i)+"-"+p.getId());
+	  	  final Player coPlayer = createNewPlayer("Spieler "+(2+i));
 	  	  coPlayer.setSpielbereit(true);
 	  	  coPlayer.setComputer(true);
 	  	  coPlayer.setPosition(2+i);
