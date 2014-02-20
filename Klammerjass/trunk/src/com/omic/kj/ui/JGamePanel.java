@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import com.omic.kj.shared.domain.CardInfo;
+import com.omic.kj.shared.domain.Farbe;
 import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerInfo;
@@ -47,9 +48,19 @@ public class JGamePanel extends JPanel {
 	public void setStatus(PlayerInfo pi) {
 		statusPanel.setText(0,"Geber: "+pi.getGeber());
 		statusPanel.setText(1,"Aufspieler: "+pi.getAufspieler());
-		statusPanel.setText(2,pi.getTrumpf()!= null ? pi.getTrumpf().name()+" ist Trumpf" : "");
+		statusPanel.setText(2,pi.getTrumpf()!= null ? getTrumpfChar(pi.getTrumpf())+" "+pi.getTrumpf().name()+" ist Trumpf" : "");
 		statusPanel.setText(3,pi.getRunde()>0 ? pi.getRunde() + ". Runde":"");
 		//cardDesk.setActivePosition (pi);
+	}
+
+	private String getTrumpfChar(Farbe t) {
+		switch (t) {
+		case Karo: return "\u2666";		
+		case Herz: return "\u2665";		
+		case Pik: return "\u2660";		
+		case Kreuz: return "\u2663";		
+		}
+		return "";
 	}
 
 	public void setCards(int deskPlaceId, List<CardInfo> cards) {
@@ -74,6 +85,10 @@ public class JGamePanel extends JPanel {
     if (n<0) return null;
     ResponseCode r = allowedResponse[n];
 		return r;
+	}
+
+	public void showBubble(int playerPosition, String message) {
+		cardDesk.showBubble(playerPosition, message);
 	}
 
 

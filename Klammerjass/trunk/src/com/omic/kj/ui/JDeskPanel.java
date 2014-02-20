@@ -45,7 +45,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 	JDeskPanel(int numberOfPlayer) {
 		super();
 		backgroundImage = getImage("/images/table.jpg");
-		
+
 		p1 = new CardArea(this);
 		p1.setStyle(Style.ROW);
 		p1.setHidden(false);
@@ -99,18 +99,19 @@ public class JDeskPanel extends JComponent implements CardListener {
 	}
 
 	final class MouseOnPlayerListener extends MouseAdapter {
-		private final Set<JComponent> playerAreas = new HashSet<>();
+		private final Set<PlayerArea> playerAreas = new HashSet<>();
 
-		public void registerComponent(JComponent component) {
+		public void registerComponent(PlayerArea component) {
 			playerAreas.add(component);
 		}
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			for (final JComponent c : playerAreas) {
+			for (final PlayerArea c : playerAreas) {
 				if (c.getBounds().contains(e.getPoint())) {
 					e.consume();
 					log.info("Clicked player: " + c);
+					showBubble(c.getPosition(), "Hey!");
 					return;
 				}
 			}
@@ -165,9 +166,9 @@ public class JDeskPanel extends JComponent implements CardListener {
 		super.paint(g);
 		final Dimension d = getSize();
 		final Graphics2D g2 = (Graphics2D) g;
-		
-		g.drawImage(backgroundImage,0,0,null);
-		
+
+		g.drawImage(backgroundImage, 0, 0, null);
+
 		final AffineTransform saveAT = g2.getTransform();
 		g2.rotate(0, 0, 0);
 		//g2.scale(0.8, 0.8);
@@ -274,35 +275,60 @@ public class JDeskPanel extends JComponent implements CardListener {
 		for (PlayerInfo pi : playerInfo) {
 			if (pi.getPosition() == 1) {
 				u1.setName(pi.getName() + " (" + pi.getPunkte() + ")");
-				//u1.setActive(pi.isActive());
 			} else if (pi.getPosition() == 2) {
 				u2.setName(pi.getName() + " (" + pi.getPunkte() + ")");
-				//u2.setActive(pi.isActive());
 			} else if (pi.getPosition() == 3) {
 				u3.setName(pi.getName() + " (" + pi.getPunkte() + ")");
-				//u3.setActive(pi.isActive());
 			} else if (pi.getPosition() == 4) {
 				u4.setName(pi.getName() + " (" + pi.getPunkte() + ")");
-				//u4.setActive(pi.isActive());
 			}
 		}
 		repaint();
-	}
-
-	public void setActivePosition(PlayerInfo pi) {
-//		u1.setActive(1 == pi.getPosition() && pi.isActive());
-//		u2.setActive(2 == pi.getPosition() && pi.isActive());
-//		u3.setActive(3 == pi.getPosition() && pi.isActive());
-//		u4.setActive(4 == pi.getPosition() && pi.isActive());
-//		repaint();
 	}
 
 	public void setActivePosition(int activePlayerPosition) {
 		u1.setActive(1 == activePlayerPosition);
 		u2.setActive(2 == activePlayerPosition);
 		u3.setActive(3 == activePlayerPosition);
-		u4.setActive(4 ==activePlayerPosition);
+		u4.setActive(4 == activePlayerPosition);
 		repaint();
+	}
+
+	public void showBubble(int playerPosition, String message) {
+		if (playerPosition == 1)
+			new BubbleThread(u1, message).start();
+		else if (playerPosition == 2)
+			new BubbleThread(u2, message).start();
+		else if (playerPosition == 3)
+			new BubbleThread(u3, message).start();
+		else if (playerPosition == 4)
+			new BubbleThread(u4, message).start();
+		repaint();
+	}
+
+	private final class BubbleThread extends Thread {
+
+		private PlayerArea playerArea;
+		private String message;
+
+		public BubbleThread(PlayerArea playerArea, String message) {
+			this.playerArea = playerArea;
+			this.message = message;
+		}
+
+		@Override
+		public void run() {
+			setName("Bubble " + this.playerArea.getPosition());
+			this.playerArea.setBubbleMessage(message);
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			this.playerArea.setBubbleMessage(null);
+			repaint();
+		}
+
 	}
 
 }

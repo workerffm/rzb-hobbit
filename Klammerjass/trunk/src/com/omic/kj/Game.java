@@ -399,7 +399,8 @@ final class Game {
 
 						// TODO: Terz check
 						// TODO: Bella check ...
-
+						sendPlayerInfo();
+						
 						if (r.getCurrentPosition() >= playerCount) {
 							// Runde ist beendet
 							calculatePointsInRound(r);
@@ -629,7 +630,8 @@ final class Game {
 		pc.setPlayerId(p.getId());
 		pc.setGameId(gameId);
 		pc.setCommandCode(CommandCode.say);
-		pc.setMessage(message);
+		final MessageInfo mi = new MessageInfo(p.getPosition(), message);
+		pc.setMessageInfo(mi);
 		this.commandListener.toPlayer(pc);
 	}
 
@@ -688,6 +690,9 @@ final class Game {
 			}
 			if (location == CardPlace.Invisible && isCardInCurrentRound(card)) {
 				location = CardPlace.Bid; // im aktuellen Stich
+				
+				/** @TODO card.getRoundPosition()  muﬂ die Sortierreihenfolge sein!!! */
+				
 			}
 			if (location == CardPlace.Invisible && card.getOwner() == null) {
 				location = CardPlace.Stock; // im Stapel
@@ -725,11 +730,7 @@ final class Game {
 
 	private void sayHello() {
 		for (Player p : player) {
-			PlayerCommand cmd = new PlayerCommand();
-			cmd.setCommandCode(CommandCode.say);
-			cmd.setMessage("hello world!");
-			cmd.setPlayerId(p.getId());
-			commandListener.toPlayer(cmd);
+			sendPlayerMsg(p,  "Hello Player!");
 		}
 	}
 
