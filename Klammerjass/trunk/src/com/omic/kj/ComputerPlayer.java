@@ -50,7 +50,7 @@ public class ComputerPlayer implements CommandListener {
 				response.setPlayerId(gameinfo.getPlayerId());
 				response.setResponseCode(ResponseCode.play);
 				for (CardInfo i : gameinfo.getKarten()) {
-					if (i.getPosition() == gameinfo.getPosition() && i.getCardPlace() ==CardPlace.Hand) {
+					if (i.getPlayerPosition() == gameinfo.getPosition() && i.getCardPlace() ==CardPlace.Hand) {
 						response.setGespielteKarte(i.getKarte());
 					}
 				}

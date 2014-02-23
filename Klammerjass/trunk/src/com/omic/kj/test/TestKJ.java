@@ -5,7 +5,14 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import com.omic.kj.local.LocalGameConnector;
 import com.omic.kj.shared.PlayerCommandListener;
-import com.omic.kj.shared.domain.*;
+import com.omic.kj.shared.domain.CardInfo;
+import com.omic.kj.shared.domain.CardPlace;
+import com.omic.kj.shared.domain.GameSettings;
+import com.omic.kj.shared.domain.PlayerCommand;
+import com.omic.kj.shared.domain.PlayerInfo;
+import com.omic.kj.shared.domain.PlayerResponse;
+import com.omic.kj.shared.domain.ResponseCode;
+import com.omic.kj.shared.domain.User;
 
 public class TestKJ {
 	static Logger log;
@@ -44,7 +51,7 @@ public class TestKJ {
 						response.setPlayerId(gameinfo.getPlayerId());
 						response.setResponseCode(ResponseCode.play);
 						for(CardInfo i:gameinfo.getKarten()) {
-							if(i.getPosition()==gameinfo.getPosition() && i.getCardPlace()==CardPlace.Hand){
+							if(i.getPlayerPosition()==gameinfo.getPosition() && i.getCardPlace()==CardPlace.Hand){
 								response.setGespielteKarte(i.getKarte());
 							}
 						}

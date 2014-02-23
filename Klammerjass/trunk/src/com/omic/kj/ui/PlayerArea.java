@@ -7,6 +7,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import javax.swing.JComponent;
 
 /**
@@ -19,8 +21,8 @@ public final class PlayerArea extends JComponent {
 	private final int BORDER = 10;
 	private final static Color bubbleColor = new Color(0xF3F5B5);
 	private final static Color activeColor = new Color(0x03572E);
-	private final static Font smallFont = new Font("Verdana", Font.BOLD, 12);
-	private final static Font largeFont = new Font("Verdana", Font.BOLD, 20);
+	private final static Font smallFont = new Font("Bauhaus 93", Font.PLAIN, 13);
+	private final static Font largeFont = new Font("Bauhaus 93", Font.PLAIN, 20);
 	private final static Composite transparent80 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.8f);
 	
 	private final JComponent owner;
@@ -39,20 +41,25 @@ public final class PlayerArea extends JComponent {
 
 	public void paint(Graphics2D g) {
 		if (getLocation() != null) {
-
+			final AffineTransform saveAT = g.getTransform();
 			final int x = getLocation().x, y = getLocation().y;
 			
-			g.setColor(this.active ? activeColor : Color.black);
-			g.fillRect(x, y+getSize().height-20, getSize().width, 20);
-      
 			if(image!=null) {		
       	int imgx=x, imgy=y;
       	if (getPosition()==1){ imgx +=10; imgy +=10;}
       	if (getPosition()==2){ imgx +=0; imgy -=0;}
       	if (getPosition()==3){ imgx +=10; imgy +=10;}
       	if (getPosition()==4){ imgx +=20; imgy +=0;}
+      	g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 			  g.drawImage(image, imgx, imgy, null);
       }
+			if(this.active) {
+			  g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,1f));
+			  g.setColor(this.active ? activeColor : Color.black);
+		  	g.fillRect(x, y+getSize().height-20, getSize().width, 20);
+			}
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		 	g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 			g.setColor(this.active? Color.white : Color.white);
 			g.setFont(smallFont);
 			g.drawString(this.name!=null?this.name:"", x+5, y+getSize().height-5);
@@ -73,6 +80,7 @@ public final class PlayerArea extends JComponent {
 			  g.drawString(this.bubbleMessage, x+5, y+12);
 			  g.setComposite(save);
 			}
+			g.setTransform(saveAT);
 		}
 	}
 

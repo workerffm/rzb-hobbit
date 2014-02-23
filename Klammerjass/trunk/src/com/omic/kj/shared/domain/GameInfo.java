@@ -6,8 +6,14 @@ import java.util.List;
  * Initial message after game has been started and after each "askforcard" command.
  */
 public class GameInfo {
-	private List<PlayerInfo> playerInfo;
 	private int activePlayerPosition;
+	private List<PlayerInfo> playerInfo;
+	private GameHistory gameHistory;
+	private int maxPoints;
+
+	public GameHistory getGameHistory() {
+		return gameHistory;
+	}
 
 	public List<PlayerInfo> getPlayerInfo() {
 		return playerInfo;
@@ -23,6 +29,18 @@ public class GameInfo {
 
 	public void setActivePlayerPosition(int activePlayerPosition) {
 		this.activePlayerPosition = activePlayerPosition;
+	}
+
+	public void setGameHistory(GameHistory gameHistory) {
+		this.gameHistory = gameHistory;
+	}
+
+	public int getMaxPoints() {
+		return maxPoints;
+	}
+
+	public void setMaxPoints(int maxPoints) {
+		this.maxPoints = maxPoints;
 	}
 
 }
