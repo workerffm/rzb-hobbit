@@ -1,6 +1,6 @@
 package com.omic.kj.shared.domain;
 
-import java.util.Set;
+import java.util.List;
 
 /** 
  * Message will be sent after each change of a player (response, card played, etc)
@@ -13,7 +13,7 @@ public class PlayerInfo {
 	//private boolean trumpfzeigen; // soll spieler die originalkarte offen zeigen?
 	private String geber, aufspieler;
 	private Farbe trumpf;
-	private Set<CardInfo> karten;
+	private List<CardInfo> karten;
 
 	public int getPlayerId() {
 		return playerId;
@@ -79,11 +79,11 @@ public class PlayerInfo {
 		this.aufspieler = aufspieler;
 	}
 
-	public Set<CardInfo> getKarten() {
+	public List<CardInfo> getKarten() {
 		return karten;
 	}
 
-	public void setKarten(Set<CardInfo> karten) {
+	public void setKarten(List<CardInfo> karten) {
 		this.karten = karten;
 	}
 

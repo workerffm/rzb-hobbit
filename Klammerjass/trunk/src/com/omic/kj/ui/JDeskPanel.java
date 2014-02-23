@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import com.omic.kj.shared.domain.CardInfo;
+import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.ui.CardArea.Style;
@@ -40,11 +41,12 @@ public class JDeskPanel extends JComponent implements CardListener {
 	private final PlayerArea u1, u2, u3, u4;
 	private int originalPosition;
 	private Karte selectedCard;
-	private final Image backgroundImage;
+	//private final Image backgroundImage;
+	private final JGameInfoArea gameInfoArea = new JGameInfoArea();
 
 	JDeskPanel(int numberOfPlayer) {
 		super();
-		backgroundImage = getImage("/images/table.jpg");
+		//backgroundImage = getImage("/images/table.jpg");
 
 		p1 = new CardArea(this);
 		p1.setStyle(Style.ROW);
@@ -96,6 +98,8 @@ public class JDeskPanel extends JComponent implements CardListener {
 		ml.registerComponent(u3);
 		ml.registerComponent(u4);
 		addMouseListener(ml);
+		
+		add(gameInfoArea);
 	}
 
 	final class MouseOnPlayerListener extends MouseAdapter {
@@ -164,12 +168,17 @@ public class JDeskPanel extends JComponent implements CardListener {
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
+
 		final Dimension d = getSize();
 		final Graphics2D g2 = (Graphics2D) g;
-
-		g.drawImage(backgroundImage, 0, 0, null);
-
 		final AffineTransform saveAT = g2.getTransform();
+
+		//g.drawImage(backgroundImage, 0, 0, null);
+		
+		gameInfoArea.setBounds(0, d.height-gameInfoArea.getPreferredSize().height,gameInfoArea.getPreferredSize().width, gameInfoArea.getPreferredSize().height );
+		gameInfoArea.paint(g2);
+		//g2.setTransform(saveAT);
+		
 		g2.rotate(0, 0, 0);
 		//g2.scale(0.8, 0.8);
 		if (p1 != null) {
@@ -229,7 +238,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 		}
 
 		// User names
-		g2.setTransform(saveAT);
+		//g2.setTransform(saveAT);
 		u1.setLocation(new Point(d.width - 100, d.height - 100));
 		u2.setLocation(new Point(5, d.height / 2 - 50));
 		u3.setLocation(new Point(50, 20));
@@ -271,7 +280,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 		this.originalPosition = originalPosition;
 	}
 
-	public void setPlayerInfo(List<PlayerInfo> playerInfo) {
+	private void setPlayerInfo(List<PlayerInfo> playerInfo) {
 		for (PlayerInfo pi : playerInfo) {
 			if (pi.getPosition() == 1) {
 				u1.setName(pi.getName() + " (" + pi.getPunkte() + ")");
@@ -286,7 +295,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 		repaint();
 	}
 
-	public void setActivePosition(int activePlayerPosition) {
+	private void setActivePosition(int activePlayerPosition) {
 		u1.setActive(1 == activePlayerPosition);
 		u2.setActive(2 == activePlayerPosition);
 		u3.setActive(3 == activePlayerPosition);
@@ -329,6 +338,16 @@ public class JDeskPanel extends JComponent implements CardListener {
 			repaint();
 		}
 
+	}
+
+
+	public void showGameInfo(final GameInfo gameInfo) {
+		setPlayerInfo (gameInfo.getPlayerInfo());
+		setActivePosition (gameInfo.getActivePlayerPosition());
+		if(gameInfo.getGameHistory()!=null) {
+			gameInfoArea.add(gameInfo.getGameHistory());
+		}
+		gameInfoArea.setActiveGameInfo("Spiel läuft", gameInfo.getMaxPoints());
 	}
 
 }

@@ -34,7 +34,15 @@ public class Theme {
 		p.setOpaque(true);
 		p.setBackground(Color.black);
 		return p;
-		
 	}
 
+	public static JComponent style4(JComponent p) {
+		p.setOpaque(true);
+		p.setFocusable(!true);
+		p.setForeground(Color.white);
+		p.setBackground(new Color(0x003399));
+		return p;
+	}
+
+	
 }

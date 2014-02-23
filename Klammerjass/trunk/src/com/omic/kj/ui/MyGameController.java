@@ -93,8 +93,11 @@ class MyGameController implements PlayerCommandListener {
 					break;
 				case frageTrumpffarbe:
 					break;
-				case roundinfo:
-					break;
+//				case gameFinish: {
+//					GameInfo info = command.getGameInfo();
+//					showGameInfo(info);
+//					break;
+//				}
 				case say: {
 					MessageInfo mi = command.getMessageInfo();
 					if (mi != null) {
@@ -134,7 +137,7 @@ class MyGameController implements PlayerCommandListener {
 
 	private void showGameInfo(GameInfo gameInfo) {
 		if (gameInfo != null) {
-			gamedesk.setPlayerInfo(gameInfo);
+			gamedesk.showGameInfo(gameInfo);
 		}
 	}
 
@@ -155,9 +158,9 @@ class MyGameController implements PlayerCommandListener {
 				deskPlaceId = 0; //dont show STOCK ! // 6;
 			else if (c.getCardPlace() == CardPlace.Original) {
 				deskPlaceId = 7;
-				originalPosition = c.getPosition();
+				originalPosition = c.getPlayerPosition();
 			} else if (c.getCardPlace() == CardPlace.Hand)
-				deskPlaceId = c.getPosition();
+				deskPlaceId = c.getPlayerPosition();
 
 			if (deskPlaceId > 0) {
 				List<CardInfo> list = cardsPerPlace.get(Integer.valueOf(deskPlaceId));

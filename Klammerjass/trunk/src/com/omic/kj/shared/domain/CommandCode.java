@@ -4,12 +4,15 @@ package com.omic.kj.shared.domain;
 public enum CommandCode {
 	gameinfo,
 	playerinfo,
-	roundinfo,
+	//roundinfo,
 	say, 
 	frageOriginal,
 	frageKleines,
 	frageTrumpffarbe,
 	frageBesser,
 	zeigeFuenfzig,
-	zeigeTerz, tauscheSieben, spieleKarte;
+	zeigeTerz, 
+	tauscheSieben, 
+	spieleKarte,
+	gameFinish;
 }

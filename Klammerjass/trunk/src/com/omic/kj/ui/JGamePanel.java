@@ -1,10 +1,15 @@
 package com.omic.kj.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Future;
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -20,29 +25,35 @@ public class JGamePanel extends JPanel {
 	private final JStatusPanel statusPanel;
 	private final JDeskPanel cardDesk;
 	private final JButton b1, b2, b3;
+	private final Image backgroundImage;
 
 	JGamePanel() {
-		super(new BorderLayout());
+		super();
+		this.cardDesk = new JDeskPanel(4);
+		this.statusPanel = new JStatusPanel();
 		
-		setBackground(Color.black);
-		statusPanel = new JStatusPanel();
-		b1 = new JButton("Bella");
-		b2 = new JButton("50");
-		b3 = new JButton("Terz");
-		JPanel btnPanel = new JPanel();
-		btnPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		btnPanel.add(b1);
-		btnPanel.add(b2);
-		btnPanel.add(b3);
+		this.backgroundImage = getImage("/images/table.jpg");
+		
+		final JPanel playerPanel = new JPanel(new BorderLayout());
+		{
+			b1 = new JButton("Bella");
+			b2 = new JButton("50");
+			b3 = new JButton("Terz");
+			JPanel btnPanel = new JPanel();
+			btnPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			btnPanel.add(Theme.style4(b1));
+			btnPanel.add(Theme.style4(b2));
+			btnPanel.add(Theme.style4(b3));
+			btnPanel.setOpaque(false);
+			playerPanel.add(btnPanel);
+			playerPanel.add(statusPanel, BorderLayout.SOUTH);
+			playerPanel.setOpaque(false);
+		}
 
-		//btnPanel.setOpaque(false);
-		JPanel playerPanel = new JPanel(new BorderLayout());
-		playerPanel.add(btnPanel);
-		playerPanel.add(statusPanel, BorderLayout.SOUTH);
-		//JPanel p = new JPanel(new BorderLayout());
-		cardDesk = new JDeskPanel(4);
-		add(cardDesk);
+		setLayout(new BorderLayout());
+		add(cardDesk, BorderLayout.CENTER);
 		add(playerPanel, BorderLayout.SOUTH);
+		setOpaque(false);
 	}
 
 	public void setStatus(PlayerInfo pi) {
@@ -75,9 +86,8 @@ public class JGamePanel extends JPanel {
     return cardDesk.askForCard();		
 	}
 
-	public void setPlayerInfo(GameInfo gameInfo) {
-		cardDesk.setPlayerInfo (gameInfo.getPlayerInfo());
-		cardDesk.setActivePosition (gameInfo.getActivePlayerPosition());
+	public void showGameInfo(GameInfo gameInfo) {
+		cardDesk.showGameInfo(gameInfo);
 	}
 
 	public ResponseCode askUser(String message, ResponseCode[] allowedResponse) {
@@ -91,5 +101,21 @@ public class JGamePanel extends JPanel {
 		cardDesk.showBubble(playerPosition, message);
 	}
 
-
+	@Override
+	public void paint(Graphics g) {
+		g.drawImage(backgroundImage, 0, 0, null);
+		super.paint(g);
+	}
+	
+	private Image getImage(String filename) {
+		try {
+			InputStream is = this.getClass().getResourceAsStream(filename);
+			BufferedImage img = ImageIO.read(is);
+			is.close();
+			return img;
+		} catch (IOException e) {
+			//log.log(Level.WARNING, "Playerimage error", e);
+		}
+		return null;
+	}
 }

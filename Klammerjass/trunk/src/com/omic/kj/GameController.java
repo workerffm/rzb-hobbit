@@ -129,7 +129,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 
 	private void startGame(final Game game) throws Exception {
 		synchronized(this.controllerLock) {
-			game.setId(nextGameId);
+			game.setGameId(nextGameId);
 			nextGameId++;
 		  activeGames.add(game);
 		}

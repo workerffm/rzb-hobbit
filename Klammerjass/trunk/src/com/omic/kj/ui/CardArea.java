@@ -1,9 +1,9 @@
 package com.omic.kj.ui;
 
+import java.awt.AlphaComposite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -68,7 +68,9 @@ public final class CardArea {
 
 	public void paint(Graphics2D g) {
 		if (getLocation() != null && cards.size() > 0) {
-
+			
+			final AffineTransform saveAT = g.getTransform();
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 			final int x = getLocation().x, y = getLocation().y;
 
 			if (getStyle() == Style.ROW) {
@@ -116,8 +118,7 @@ public final class CardArea {
 			} // STACK
 
 			else if (getStyle() == Style.CROSS) {
-
-				final AffineTransform saveAT = g.getTransform();
+			
 				int imgx = x - cardDimension.width / 2;
 				int imgy = y - cardDimension.height / 2;
 				for (int n = 0; n < cards.size(); n++) {
@@ -129,13 +130,13 @@ public final class CardArea {
 					} else {
 						img = CardImageCache.getImage(card);
 					}
-					final int p = ci.getPosition();
+					final int p = ci.getPlayerPosition();
 					g.rotate(crossRotation, x, y);
 					g.drawImage(img, imgx + CROSS_OFFSET, imgy + CROSS_OFFSET, null);
 				}
-				// !! Reset transformation !!
-				g.setTransform(saveAT);
 			} // CROSS
+			// !! Reset transformation !!
+			g.setTransform(saveAT);
 		}
 
 	}

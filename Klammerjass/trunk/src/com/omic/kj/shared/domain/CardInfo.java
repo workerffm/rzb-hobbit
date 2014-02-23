@@ -6,9 +6,10 @@ package com.omic.kj.shared.domain;
 public class CardInfo implements Comparable<CardInfo>{
 	
   private Karte karte;
+  private boolean offen;
   private CardPlace cardPlace;
-	private boolean offen;
-	private int position;  //1-4 spieler position
+	private int playerPosition;  // Spieler Position 1-4
+	private int roundPosition;  // Reihenfolge im Stich 1-4, oder 0 (nicht im Stich)
 	
   public Karte getKarte() {
 		return karte;
@@ -22,12 +23,7 @@ public class CardInfo implements Comparable<CardInfo>{
 	public void setOffen(boolean offen) {
 		this.offen = offen;
 	}
-	public int getPosition() {
-		return position;
-	}
-	public void setPosition(int position) {
-		this.position = position;
-	}
+	
 	
 	public CardPlace getCardPlace() {
 		return cardPlace;
@@ -37,9 +33,10 @@ public class CardInfo implements Comparable<CardInfo>{
 	}
 	
 
+	
 	@Override
 	public String toString() {
-		return "CardInfo [karte=" + karte + ", offen=" + offen + ", position=" + position + ", cardPlace=" + cardPlace + "]";
+		return "CardInfo [karte=" + karte + ", offen=" + offen + ", position=" + getPlayerPosition() + ", cardPlace=" + cardPlace + "]";
 	}
 	@Override
 	public int compareTo (final CardInfo other) {
@@ -47,6 +44,17 @@ public class CardInfo implements Comparable<CardInfo>{
 		if (karte.getRank()>other.karte.getRank()) return 1;
 		return 0;
 	}
-
+	public int getPlayerPosition() {
+		return playerPosition;
+	}
+	public void setPlayerPosition(int playerPosition) {
+		this.playerPosition = playerPosition;
+	}
+	public int getRoundPosition() {
+		return roundPosition;
+	}
+	public void setRoundPosition(int roundPosition) {
+		this.roundPosition = roundPosition;
+	}
 	
 }
