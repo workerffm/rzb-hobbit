@@ -7,6 +7,7 @@ final class PlayRound {
   private int points;
 	private int nr;
 	private int currentPosition;
+	private int count;
   
 	public Player getWinner() {
 		return winner;
@@ -35,6 +36,12 @@ final class PlayRound {
 	@Override
 	public String toString() {
 		return "PlayRound [winner=" + winner + ", points=" + points + ", nr=" + nr + ", currentPosition=" + currentPosition + "]";
+	}
+	public int getCount() {
+		return count;
+	}
+	public void setCount(int count) {
+		this.count = count;
 	}
 
 

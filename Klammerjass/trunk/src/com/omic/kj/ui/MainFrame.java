@@ -143,6 +143,7 @@ class MainFrame extends JFrame {
 			g.run(settings);
 			
 		} catch (Exception e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}

@@ -57,14 +57,17 @@ public class JDeskPanel extends JComponent implements CardListener {
 		p2 = new CardArea(this);
 		p2.setStyle(Style.ROW);
 		p2.setHidden(true);
+		p2.setOverlapp(0.6d);
 
 		p3 = new CardArea(this);
 		p3.setStyle(Style.ROW);
 		p3.setHidden(true);
+		p3.setOverlapp(0.6d);
 
 		p4 = new CardArea(this);
 		p4.setStyle(Style.ROW);
 		p4.setHidden(true);
+		p4.setOverlapp(0.6d);
 
 		// Stich
 		p5 = new CardArea(this);

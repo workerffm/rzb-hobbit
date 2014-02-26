@@ -41,7 +41,7 @@ public final class CardArea {
 	//private final int BORDER =80;
 	private final int EXPOSE_OFFSET = 21;
 	private final int CROSS_OFFSET = 45;
-	private final double overlapp = .45d; // x% overlapp to next card
+	private final double DEFAULT_OVERLAPP = .45d; // x% overlapp to next card
 
 	private boolean hidden;
 	private boolean exposeSelectedCard;
@@ -56,6 +56,7 @@ public final class CardArea {
 	private final List<Entry<Rectangle, Karte>> cardAreas;
 	private final Set<CardListener> listeners;
 	private double crossRotation;
+	private double overlapp;
 
 	CardArea(final JComponent owner) {
 		super();
@@ -64,6 +65,7 @@ public final class CardArea {
 		listeners = new HashSet<>();
 		cardAreas = new ArrayList<>();
 		cardDimension = CardImageCache.getCardDimension();
+		overlapp=(DEFAULT_OVERLAPP);
 	}
 
 	public void paint(Graphics2D g) {
@@ -75,7 +77,7 @@ public final class CardArea {
 
 			if (getStyle() == Style.ROW) {
 
-				final int step = (int) Math.round((1d - this.overlapp) * cardDimension.width);
+				final int step = (int) Math.round((1d - this.getOverlapp()) * cardDimension.width);
 				int imgx = x - (step * cards.size()) / 2 + (offset != null ? offset.x: 0);
 
 				cardAreas.clear();
@@ -161,7 +163,7 @@ public final class CardArea {
 
 	public void clearCards() {
 		this.cards.clear();
-		this.crossRotation = Math.toRadians(50 + (5 - Math.random() * 10));
+		this.crossRotation = Math.toRadians(50); // + (5 - Math.random() * 10));
 	}
 
 	public void addCard(CardInfo k) {
@@ -255,6 +257,14 @@ public final class CardArea {
 
 	public void setOffset(Point offset) {
 		this.offset = offset;
+	}
+
+	public double getOverlapp() {
+		return overlapp;
+	}
+
+	public void setOverlapp(double overlapp) {
+		this.overlapp = overlapp;
 	}
 
 }
