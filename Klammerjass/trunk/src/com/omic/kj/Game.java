@@ -55,6 +55,7 @@ final class Game {
 	private int nextRoundNr; // ID,Rundennummer
 	private Player aufspieler; // Spieler der beim aktuellen Stich rausgekommt
 	private final List<PlayRound> playrounds;
+	private int gameNr;  // Spielzähler für die History
 	/** Game transaction data */
 
 	
@@ -116,6 +117,9 @@ final class Game {
 	}
 
 	public void startGame() throws Exception {
+		
+		// PLAYER CHECK
+		//
 		int n = player.size();
 		if (n < 2) {
 			throw new Exception("Zu wenig Spieler für ein Spiel.");
@@ -124,17 +128,19 @@ final class Game {
 			throw new Exception("Zu viele Spieler für ein Spiel.");
 		}
 
-		loadCards();
-
-		start = new Date();
-		gameName = "Game " + gameId;
-		gotoGameState(GameState.G0);
-
 		final int playerCount = player.size();
-
 		if (playerCount < 2 || playerCount > 4) {
 			throw new Exception("Unpassende Spieleranzahl.");
 		}
+
+		// FIRST TIME INITIALIZATION
+		//
+		loadCards();
+		start = new Date();
+		gameName = "Game " + gameId;
+		gameNr = 0;
+		gotoGameState(GameState.G0);
+
 
 		// LOOP FOR 4 PLAYER !!
 
@@ -158,6 +164,7 @@ final class Game {
 			// -----------------------------------------------------------
 			case G0: {
 				resetGame();
+				gameNr++;
 				nextRoundNr = 1;
 				selectGeber();
 				sendGameInfo();
@@ -398,13 +405,17 @@ final class Game {
 					gotoGameState(GameState.S4);
 				} else {
 					// In der 1. Runde spielt der Nebenmann auf:
-					aufspieler = getPlayerLeftFromGeber(+1);
+					final PlayRound r = getCurrentRound();
+					if (r==null || r.getNr() == 1) {
+					  aufspieler = getPlayerLeftFromGeber(+1);
+					}
 					// Neue Runde starten
-					final PlayRound r = new PlayRound();
-					r.setNr(nextRoundNr);
-					r.setCurrentPosition(1);
+					final PlayRound newRound = new PlayRound();
+					newRound.setNr(nextRoundNr);
+					newRound.setCount(0);
+					newRound.setCurrentPosition(aufspieler.getPosition());
 					nextRoundNr++;
-					playrounds.add(r);
+					playrounds.add(newRound);
 					// Prepare next step and send out game info 
 					gotoGameState(GameState.S2);
 				}
@@ -443,12 +454,13 @@ final class Game {
 						// TODO: Bella check ...
 						sendPlayerInfo();
 
-						if (r.getCurrentPosition() >= playerCount) {
+						r.setCount(r.getCount()+1);
+						if (r.getCount() >= playerCount) {
 							// Runde ist beendet
 							calculatePointsInRound(r);
-							if (r.getNr() == 1) {
+							//if (r.getNr() == 1) {
 								aufspieler = r.getWinner();
-							}
+							//}
 							gotoGameState(GameState.S1);
 						} else {
 							// Weiter auf nächste Karte warten
@@ -470,7 +482,7 @@ final class Game {
 				this.winner = gameWinner;
 
 				// Record the game
-				final GameHistory h = new GameHistory(this.gameId, this.winner.getPoints(), this.winner.getUsername());
+				final GameHistory h = new GameHistory(this.gameNr, this.winner.getPoints(), this.winner.getUsername());
 				gameHistory.add(h);
 
 				if (this.winner.getPoints() >= maxPoints) {
@@ -650,6 +662,7 @@ final class Game {
 		final GameInfo gameInfo = new GameInfo();
 		gameInfo.setPlayerInfo(playerInfo);
 		gameInfo.setMaxPoints(this.maxPoints);
+		// Send the last history if the game is finished only:
 		gameInfo.setGameHistory(this.state==GameState.S5 && gameHistory.size() > 0 ? gameHistory.get(gameHistory.size() - 1) : null);
 		final PlayRound r = getCurrentRound();
 		gameInfo.setActivePlayerPosition(activePlayerPosition);

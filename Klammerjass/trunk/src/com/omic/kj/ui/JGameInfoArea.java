@@ -84,7 +84,7 @@ public class JGameInfoArea extends JComponent {
 			g.setColor(Color.white);
 			g.setFont(largeFont);
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
-			g.drawString("Spiel " + hist.getGameId() + " - "+hist.getWinner()+" - "+hist.getPoints(), x + 4, y + 22);
+			g.drawString("Spiel " + hist.getGameNr() + " - "+hist.getWinner()+" - "+hist.getPoints(), x + 4, y + 22);
 			y -= 28;
 		}
     g.setTransform(saveAT);

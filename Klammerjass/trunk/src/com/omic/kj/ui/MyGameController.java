@@ -51,10 +51,12 @@ class MyGameController implements PlayerCommandListener {
 	public void onMessage(final PlayerCommand command) {
 		try {
 
+			log.info("PlayerCommand received: " + command.getPlayerId()+" - "+command.getCommandCode().toString());
+			
 			// Filter für user, bekommt immer alle Meldungen für alle Spieler !!
 			if (command.getPlayerId() == user.getId()) {
 
-				log.info("game command received: " + command.getCommandCode().toString());
+				//log.info("game command received: " + command.getCommandCode().toString());
 
 				switch (command.getCommandCode()) {
 				case gameinfo: {
@@ -79,11 +81,23 @@ class MyGameController implements PlayerCommandListener {
 				case spieleKarte: {
 					final PlayerInfo info = command.getInfo();
 					showPlayerInfo(info);
-					Future<Karte> card = gamedesk.askForCard();
+					Karte selectedCard=null;
+					final List<Karte> roundCards = extractCards (info.getKarten(), CardPlace.Bid, 0); 
+					final List<Karte> handCards = extractCards (info.getKarten(), CardPlace.Hand, info.getPosition()); 
+					for(;;) {
+					  Future<Karte> card = gamedesk.askForCard();
+					  selectedCard = card.get();
+					  if (PlayRules.isValidToPlay(selectedCard, handCards, roundCards, info.getTrumpf())){
+					  	break;
+					  }
+					  else {
+					  	gamedesk.showBubble(info.getPosition(), "falsch");	
+					  }
+					}
 					PlayerResponse response = new PlayerResponse();
 					response.setPlayerId(info.getPlayerId());
 					response.setResponseCode(ResponseCode.play);
-					response.setGespielteKarte(card.get());
+					response.setGespielteKarte(selectedCard);
 					connector.playerResponse(response);
 					break;
 				}
@@ -180,6 +194,16 @@ class MyGameController implements PlayerCommandListener {
 			pause();
 		}
 	}
+	
+	private List<Karte> extractCards(List<CardInfo> karten, CardPlace cardPlace, int position) {
+		ArrayList<Karte> list = new ArrayList<>();
+		for (CardInfo c : karten) {
+			if(c.getCardPlace() == cardPlace && (position==0 ||c.getPlayerPosition() == position))
+				list.add(c.getKarte());
+		}
+		return list;
+	}
+
 
 	private void pause() {
 		try {
