@@ -1,7 +1,17 @@
 package com.omic.kj;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
-import com.omic.kj.shared.domain.*;
+import com.omic.kj.shared.domain.CardInfo;
+import com.omic.kj.shared.domain.CardPlace;
+import com.omic.kj.shared.domain.Karte;
+import com.omic.kj.shared.domain.Player;
+import com.omic.kj.shared.domain.PlayerCommand;
+import com.omic.kj.shared.domain.PlayerInfo;
+import com.omic.kj.shared.domain.PlayerResponse;
+import com.omic.kj.shared.domain.ResponseCode;
+import com.omic.kj.ui.PlayRules;
 
 /**
  * Klammerjass : Client execution machine, simulate Computer player
@@ -14,7 +24,7 @@ public class ComputerPlayer implements CommandListener {
 	private final Logger log = Logger.getLogger("ComputerPlayer");
 	private final Player me;
 	private PlayerResponseListener listener;
-	private PlayerInfo gameinfo;
+	//private PlayerInfo gameinfo;
 
 	public ComputerPlayer(Player player) {
 		this.me = player;
@@ -31,6 +41,7 @@ public class ComputerPlayer implements CommandListener {
 	@Override
 	public void toPlayer(PlayerCommand command) {
 		if (command.getPlayerId() == me.getId()) {
+			PlayerInfo gameinfo;
 			//log.info(command + "");
 			switch (command.getCommandCode()) {
 			case playerinfo: {
@@ -38,27 +49,60 @@ public class ComputerPlayer implements CommandListener {
 				break;
 			}
 			case frageOriginal: {
+				gameinfo = command.getInfo();
 				PlayerResponse response = new PlayerResponse();
 				response.setPlayerId(gameinfo.getPlayerId());
 				response.setResponseCode(ResponseCode.nein);
 				listener.onMessage(response);
 				break;
 			}
-			case spieleKarte:{
-				gameinfo = command.getInfo();
-				PlayerResponse response = new PlayerResponse();
-				response.setPlayerId(gameinfo.getPlayerId());
-				response.setResponseCode(ResponseCode.play);
-				for (CardInfo i : gameinfo.getKarten()) {
-					if (i.getPlayerPosition() == gameinfo.getPosition() && i.getCardPlace() ==CardPlace.Hand) {
-						response.setGespielteKarte(i.getKarte());
-					}
+			case spieleKarte: {
+				final PlayerInfo info = command.getInfo();
+				Karte selectedCard=null;
+				final List<Karte> roundCards = extractCards (info.getKarten(), CardPlace.Bid, 0); 
+				final List<Karte> handCards = extractCards (info.getKarten(), CardPlace.Hand, info.getPosition()); 
+				while(selectedCard==null) {
+				  for(Karte k:handCards) {
+				    if (PlayRules.isValidToPlay(k, handCards, roundCards, info.getTrumpf())){
+				    	selectedCard = k;
+				    	break;
+				    }
+				  }
 				}
+				final PlayerResponse response = new PlayerResponse();
+				response.setPlayerId(info.getPlayerId());
+				response.setResponseCode(ResponseCode.play);
+				response.setGespielteKarte(selectedCard);
 				listener.onMessage(response);
 				break;
-			}}
+			}
+			
+//			case spieleKarte:{
+//				gameinfo = command.getInfo();
+//				PlayerResponse response = new PlayerResponse();
+//				response.setPlayerId(gameinfo.getPlayerId());
+//				response.setResponseCode(ResponseCode.play);
+//				for (CardInfo i : gameinfo.getKarten()) {
+//					if (i.getPlayerPosition() == gameinfo.getPosition() && i.getCardPlace() ==CardPlace.Hand) {
+//						response.setGespielteKarte(i.getKarte());
+//					}
+//				}
+//				listener.onMessage(response);
+//				break;
+//			}
+			}
 		}
 	}
+	
+	private List<Karte> extractCards(List<CardInfo> karten, CardPlace cardPlace, int position) {
+		ArrayList<Karte> list = new ArrayList<>();
+		for (CardInfo c : karten) {
+			if(c.getCardPlace() == cardPlace && (position==0 ||c.getPlayerPosition() == position))
+				list.add(c.getKarte());
+		}
+		return list;
+	}
+
 
 	//	@Override
 	//	public Color askFarbe(Game g) throws GameException {

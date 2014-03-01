@@ -7,6 +7,9 @@ import com.omic.kj.shared.domain.Karte;
 public class PlayRules {
 
 
+  /**
+   * Return true, if the card is allowed to play out.
+	 */
 	public static boolean isValidToPlay(Karte selectedCard, List<Karte> hardCards, List<Karte> roundCards, Farbe trumpf) {
 		if(roundCards==null || roundCards.size()==0)
 			return true;
@@ -45,7 +48,7 @@ public class PlayRules {
 		  return true;
 		}
 		// Es muß übertrumpft werden
-		if(maxTrumpfImStich!=null){
+		//if(maxTrumpfImStich!=null){
 			if (selectedCard.getRank() > maxTrumpfImStich.getRank())
 			  return true;
 			else if (selectedCard.getFarbe()==trumpf) {
@@ -53,8 +56,8 @@ public class PlayRules {
 				return true;
 			}
 			return false;
-		}
-		return true;
+		//}
+		//return true;
 	}
 
 	private static boolean hatNochFarbe(List<Karte> hardCards, Farbe f) {

@@ -21,7 +21,7 @@ import com.omic.kj.shared.domain.PlayerResponse;
 import com.omic.kj.shared.domain.ResponseCode;
 import com.omic.kj.shared.domain.User;
 
-class MyGameController implements PlayerCommandListener {
+class LocalPlayer implements PlayerCommandListener {
 
 	private final Logger log = Logger.getLogger("UI");
 
@@ -31,7 +31,7 @@ class MyGameController implements PlayerCommandListener {
 	private int maxPlayer;
 	private final Map<Integer, List<CardInfo>> cardsPerPlace;
 
-	MyGameController() {
+	LocalPlayer() {
 		cardsPerPlace = new HashMap<>();
 	}
 
@@ -131,6 +131,8 @@ class MyGameController implements PlayerCommandListener {
 			} // My personal commands
 
 			// Command for other user to render
+			// Command for other user to render
+			// Command for other user to render
 			else {
 				switch (command.getCommandCode()) {
 				case say: {
@@ -140,7 +142,7 @@ class MyGameController implements PlayerCommandListener {
 					}
 				}
 				default:
-					// Ignore command
+					// Ignore all other commands
 				}
 			}
 
