@@ -10,7 +10,7 @@ final class PlayCard
 	
   /* game data: */
 	private int roundNr;        // Runden Nummer
-	private int roundPosition;  // Reihenfolge innerhalb vom Stich
+	private int bidNr;  // Reihenfolge innerhalb vom Stich
 	private Player owner;
   
   
@@ -44,7 +44,7 @@ final class PlayCard
 	public String toString() {
 		return "["
 		  +roundNr+"|"
-		  +roundPosition+"|"
+		  +getBidNr()+"|"
 		  +padr((owner!=null?owner.getUsername():null),15)+"|"
 		  +(isFree()?"free":"used")+"|"
 		  //+padr((original?"orig.":""),5)+"|"
@@ -113,20 +113,20 @@ final class PlayCard
 		return karte.getPunkte();
 	}
 
-	public int getRoundPosition() {
-		return roundPosition;
-	}
-
-	public void setRoundPosition(int roundPosition) {
-		this.roundPosition = roundPosition;
-	}
-
 	public int getRoundNr() {
 		return roundNr;
 	}
 
 	public void setRoundNr(int roundNr) {
 		this.roundNr = roundNr;
+	}
+
+	public int getBidNr() {
+		return bidNr;
+	}
+
+	public void setBidNr(int bidNr) {
+		this.bidNr = bidNr;
 	}	
 
 }

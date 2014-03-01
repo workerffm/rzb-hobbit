@@ -72,7 +72,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		final Player p = new Player();
 		p.setUsername(username);
 		p.setPosition(1);
-		p.setPoints(0);
+		//p.setRoundPoints(0);
 		p.setSpielbereit(true);
 		p.setTeamId(1);
 		synchronized (this.controllerLock) {

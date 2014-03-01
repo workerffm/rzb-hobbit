@@ -286,7 +286,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 	private void setPlayerInfo(List<PlayerInfo> playerInfo) {
 		for (PlayerInfo pi : playerInfo) {
 			if (pi.getPosition() == 1) {
-				u1.setName(pi.getName() + " (" + pi.getPunkte() + ")");
+				u1.setName(pi.getName() + " (" + pi.getPunkte() + "/" + pi.getGesamtpunkte()+")");
 			} else if (pi.getPosition() == 2) {
 				u2.setName(pi.getName() + " (" + pi.getPunkte() + ")");
 			} else if (pi.getPosition() == 3) {

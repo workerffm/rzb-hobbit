@@ -138,7 +138,7 @@ class MainFrame extends JFrame {
 			//GameSettings settings = new GameSettings(true, getInt(tfGegner), getInt(tfPunkte));
 			final GameSettings settings = new GameSettings(true, 3,222);
 
-			final MyGameController g = new MyGameController();
+			final LocalPlayer g = new LocalPlayer();
 			g.setGameDesk(this.gamedesk);
 			g.run(settings);
 			

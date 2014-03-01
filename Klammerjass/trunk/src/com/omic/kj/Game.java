@@ -33,11 +33,11 @@ final class Game {
 
 	private int gameId; // identifier for compare method
 	private String gameName;
-	private int maxPoints; // Spielende bei diesen Punkten
+	private int maxSessionPoints; // Spielende bei diesen Punkten
 
 	private CommandListener commandListener; // send player command to this listener!
 	private final ArrayBlockingQueue<GameEvent> eventQueue;
-	private GameState state; // aktuelle Phase
+	private GameState gameState; // aktuelle Phase
 
 	private final List<Player> player; // 2 to 4 players per game
 	private final Set<ComputerPlayer> computerPlayer; // save extra the auto player
@@ -51,28 +51,29 @@ final class Game {
 	private Player trumpfPlayer; // Spieler der original oder kleines spielt.
 	private Karte original; // Die umgedrehte Karte beim Geben, für alle sichtbar.
 	private boolean originalSelected; // trumpfPlayer wählte original
-	private Player winner; // Spielgewinner
-	private int nextRoundNr; // ID,Rundennummer
-	private Player aufspieler; // Spieler der beim aktuellen Stich rausgekommt
+	private Player gameWinner; // Spielgewinner
+	private int nextRoundNr; // Rundennummer
 	private final List<PlayRound> playrounds;
-	private int gameNr;  // Spielzähler für die History
+	private int gameNr; // Spielzähler für die History
+	private Player activePlayer;
+
 	/** Game transaction data */
 
-	
 	private void resetGame() {
+		//gameWinner = null;
 		trumpfFarbe = null;
 		geber = null;
+		activePlayer = null;
 		trumpfPlayer = null;
 		original = null;
 		originalSelected = false;
-		winner = null;
 		nextRoundNr = 0;
-		aufspieler = null;
 		playrounds.clear();
-		for(PlayCard c:playcards) {
+
+		for (PlayCard c : playcards) {
 			c.setOwner(null);
 			c.setRoundNr(0);
-			c.setRoundPosition(0);
+			c.setBidNr(0);
 		}
 	}
 
@@ -93,7 +94,7 @@ final class Game {
 			if (gs != null) {
 				setLimit(gs.getMaximumPoints());
 			}
-			setLimit(Math.min(300, maxPoints));
+			setLimit(Math.min(300, maxSessionPoints));
 		} else {
 			throw new Exception("Too many players for this game.");
 		}
@@ -105,7 +106,7 @@ final class Game {
 	}
 
 	private void setLimit(int maximumPoints) {
-		this.maxPoints = maximumPoints;
+		this.maxSessionPoints = maximumPoints;
 	}
 
 	public boolean hasPlayer(int playerId) {
@@ -117,20 +118,20 @@ final class Game {
 	}
 
 	public void startGame() throws Exception {
-		
+
 		// PLAYER CHECK
 		//
-		int n = player.size();
-		if (n < 2) {
-			throw new Exception("Zu wenig Spieler für ein Spiel.");
-		}
-		if (n > 4) {
-			throw new Exception("Zu viele Spieler für ein Spiel.");
-		}
-
 		final int playerCount = player.size();
-		if (playerCount < 2 || playerCount > 4) {
-			throw new Exception("Unpassende Spieleranzahl.");
+		{
+			if (playerCount < 2) {
+				throw new Exception("Zu wenig Spieler für ein Spiel.");
+			}
+			if (playerCount > 4) {
+				throw new Exception("Zu viele Spieler für ein Spiel.");
+			}
+			if (playerCount < 2 || playerCount > 4) {
+				throw new Exception("Unpassende Spieleranzahl.");
+			}
 		}
 
 		// FIRST TIME INITIALIZATION
@@ -141,25 +142,24 @@ final class Game {
 		gameNr = 0;
 		gotoGameState(GameState.G0);
 
-
 		// LOOP FOR 4 PLAYER !!
 
 		for (;;) {
 
 			final GameEvent event = getNextEvent(20000);
-			Thread.sleep(100);
+			Thread.sleep(50);
 
 			if (event == null) {
-				log.info("State=" + state + ", waiting for events");
+				log.info("State=" + gameState + ", waiting for events");
 				continue;
 			}
-			log.info("State=" + state + ", event=" + event);
+			log.info("State=" + gameState + ", event=" + event);
 
 			if (event.getEvent() == EventType.gostate) {
-				state = event.getState();
+				gameState = event.getState();
 			}
 
-			switch (state) {
+			switch (gameState) {
 
 			// -----------------------------------------------------------
 			case G0: {
@@ -208,7 +208,7 @@ final class Game {
 			case G2: {
 				Player p = getPlayerLeftFromGeber(+1);
 				sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-				state = GameState.G3;
+				gameState = GameState.G3;
 				break;
 			}
 			// -----------------------------------------------------------
@@ -219,14 +219,14 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+2);
 						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G4;
+						gameState = GameState.G4;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -239,14 +239,14 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+3);
 						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G5;
+						gameState = GameState.G5;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -259,14 +259,14 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+0);
 						sendPlayerCommand(p, CommandCode.frageOriginal, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G6;
+						gameState = GameState.G6;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -279,14 +279,14 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Weg!");
 						Player p = getPlayerLeftFromGeber(+1);
 						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G7;
+						gameState = GameState.G7;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -299,13 +299,13 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+2);
 						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G8;
+						gameState = GameState.G8;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+1);
 						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
-						state = GameState.G11;
+						gameState = GameState.G11;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -318,13 +318,13 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+3);
 						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G9;
+						gameState = GameState.G9;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+2);
 						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
-						state = GameState.G12;
+						gameState = GameState.G12;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -337,13 +337,13 @@ final class Game {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
 						Player p = getPlayerLeftFromGeber(+0);
 						sendPlayerCommand(p, CommandCode.frageKleines, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.G10;
+						gameState = GameState.G10;
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+3);
 						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
-						state = GameState.G13;
+						gameState = GameState.G13;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -358,9 +358,9 @@ final class Game {
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+0);
 						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
-						state = GameState.G14;
+						gameState = GameState.G14;
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -378,7 +378,7 @@ final class Game {
 						originalSelected = false;
 						gotoGameState(GameState.S0);
 					} else {
-						throw new Exception("Unexpected response: state=" + state + ", response=" + response.getResponseCode());
+						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
 					}
 				}
 				break;
@@ -392,7 +392,7 @@ final class Game {
 					final Player trumpf7_owner = trumpf7.getOwner();
 					if (trumpf7_owner != null && !original.equals(trumpf7)) {
 						sendPlayerCommand(trumpf7_owner, CommandCode.tauscheSieben, new ResponseCode[] { ResponseCode.ja, ResponseCode.nein });
-						state = GameState.X1;
+						gameState = GameState.X1;
 					}
 				} else {
 					gotoGameState(GameState.S1);
@@ -404,16 +404,16 @@ final class Game {
 				if (!areCardsAvailable()) {
 					gotoGameState(GameState.S4);
 				} else {
-					// In der 1. Runde spielt der Nebenmann auf:
-					final PlayRound r = getCurrentRound();
-					if (r==null || r.getNr() == 1) {
-					  aufspieler = getPlayerLeftFromGeber(+1);
-					}
 					// Neue Runde starten
 					final PlayRound newRound = new PlayRound();
 					newRound.setNr(nextRoundNr);
-					newRound.setCount(0);
-					newRound.setCurrentPosition(aufspieler.getPosition());
+					newRound.setBidNr(0);
+					// In der 1. Runde spielt der Nebenmann auf:
+					if (newRound.getNr() == 1) {
+						newRound.setAufspieler(getPlayerLeftFromGeber(+1));
+					} else {
+						newRound.setAufspieler(getCurrentRound().getWinner());
+					}
 					nextRoundNr++;
 					playrounds.add(newRound);
 					// Prepare next step and send out game info 
@@ -425,8 +425,9 @@ final class Game {
 			case S2: {
 				final PlayRound r = getCurrentRound();
 				// Nächster Spieler im Uhrzeigersinn:
-				final Player p = getPlayerLeftFromAufspieler(r.getCurrentPosition() - 1);
-				sendGameInfo(p.getPosition());
+				final Player p = getPlayerLeftFrom(r.getAufspieler(), r.getBidNr());
+				setActivePlayer(p);
+				sendGameInfo(false);
 				sendPlayerInfo();
 				sendPlayerCommand(p, CommandCode.spieleKarte, new ResponseCode[] { ResponseCode.play });
 				gotoGameState(GameState.S3);
@@ -447,24 +448,22 @@ final class Game {
 						if (p == null)
 							throw new Exception("player not found: " + response.getPlayerId());
 
-						c.setRoundPosition(r.getCurrentPosition());
+						c.setBidNr(r.getBidNr());
 						c.setRoundNr(r.getNr());
 
 						// TODO: Terz check
 						// TODO: Bella check ...
 						sendPlayerInfo();
 
-						r.setCount(r.getCount()+1);
-						if (r.getCount() >= playerCount) {
+						if (r.getBidNr() >= playerCount - 1) {
 							// Runde ist beendet
 							calculatePointsInRound(r);
-							//if (r.getNr() == 1) {
-								aufspieler = r.getWinner();
-							//}
+							//aufspieler = r.getWinner();
+							log.info("ROUND finished: " + r.toString());
 							gotoGameState(GameState.S1);
 						} else {
 							// Weiter auf nächste Karte warten
-							r.setCurrentPosition(r.getCurrentPosition() + 1);
+							r.setBidNr(r.getBidNr() + 1);
 							gotoGameState(GameState.S2);
 						}
 					}
@@ -475,17 +474,21 @@ final class Game {
 			case S4: {
 				// Spielende, Gesamtpunkte, Gewinner berechnen.
 				Player gameWinner = null;
+				int gamePoints = 0;
 				for (Player p : player) {
-					if (gameWinner == null || p.getPoints() > gameWinner.getPoints())
+					final int n = getTotalGamePoints(p);
+					if (gameWinner == null || n > gamePoints) {
 						gameWinner = p;
+						gamePoints = n;
+					}
 				}
-				this.winner = gameWinner;
+				this.gameWinner = gameWinner;
 
 				// Record the game
-				final GameHistory h = new GameHistory(this.gameNr, this.winner.getPoints(), this.winner.getUsername());
+				final GameHistory h = new GameHistory(this.gameNr, gamePoints, this.gameWinner.getUsername());
 				gameHistory.add(h);
 
-				if (this.winner.getPoints() >= maxPoints) {
+				if (getMaxGamePoints() >= maxSessionPoints) {
 					sendGameInfo();
 					gotoGameState(GameState.GOV);
 				} else {
@@ -502,7 +505,7 @@ final class Game {
 					}
 				}
 				sendPlayerInfo();
-				sendGameInfo();
+				sendGameInfo(true);
 				// Restart Game:
 				gotoGameState(GameState.G0);
 				break;
@@ -535,6 +538,10 @@ final class Game {
 			}
 			}
 		}
+	}
+
+	private void setActivePlayer(Player p) {
+		this.activePlayer = p;
 	}
 
 	/**
@@ -573,7 +580,7 @@ final class Game {
 		}
 		round.setWinner(winner);
 		round.setPoints(points);
-		winner.setPoints(winner.getPoints() + points);
+		//winner.setRoundPoints(points);
 		log.fine("Round " + round.getNr() + ": " + points + " points for player " + winner.getUsername());
 	}
 
@@ -632,8 +639,8 @@ final class Game {
 	 * n-ter Spieler im Uhrzeigersinn vom Geber ausgehend
 	 * =REST(A2-1+$B$1;4)+1
 	 */
-	private Player getPlayerLeftFromGeber(int step) throws Exception {
-		final int nextPosition = ((this.geber.getPosition() - 1 + step) % player.size()) + 1;
+	private Player getPlayerLeftFrom(Player pp, int step) throws Exception {
+		final int nextPosition = ((pp.getPosition() - 1 + step) % player.size()) + 1;
 		for (Player p : player) {
 			if (p.getPosition() == nextPosition)
 				return p;
@@ -641,29 +648,25 @@ final class Game {
 		throw new Exception("next player not found(1)");
 	}
 
-	private Player getPlayerLeftFromAufspieler(int step) throws Exception {
-		final int nextPosition = ((this.aufspieler.getPosition() - 1 + step) % player.size()) + 1;
-		for (Player p : player) {
-			if (p.getPosition() == nextPosition)
-				return p;
-		}
-		throw new Exception("next player not found(2)");
+	private Player getPlayerLeftFromGeber(int step) throws Exception {
+		return getPlayerLeftFrom(this.geber, step);
 	}
 
 	/**
 	 * Distribute all player info to all other player
 	 */
-	private void sendGameInfo(int activePlayerPosition) {
+	private void sendGameInfo(boolean withGameHistory) {
 		final List<PlayerInfo> playerInfo = new ArrayList<PlayerInfo>(player.size());
 		// Collect info about all players
 		for (Player p : player) {
 			playerInfo.add(buildPlayerInfo(p));
 		}
+		int activePlayerPosition = this.activePlayer != null ? this.activePlayer.getPosition() : 0;
 		final GameInfo gameInfo = new GameInfo();
 		gameInfo.setPlayerInfo(playerInfo);
-		gameInfo.setMaxPoints(this.maxPoints);
+		gameInfo.setMaxPoints(this.maxSessionPoints);
 		// Send the last history if the game is finished only:
-		gameInfo.setGameHistory(this.state==GameState.S5 && gameHistory.size() > 0 ? gameHistory.get(gameHistory.size() - 1) : null);
+		gameInfo.setGameHistory(withGameHistory && gameHistory.size() > 0 ? gameHistory.get(gameHistory.size() - 1) : null);
 		final PlayRound r = getCurrentRound();
 		gameInfo.setActivePlayerPosition(activePlayerPosition);
 		// Send to all players
@@ -678,10 +681,7 @@ final class Game {
 	}
 
 	private void sendGameInfo() {
-		// Select the active player from the current round, 
-		// if no round is active, set 0 for "no player is active."
-		final PlayRound r = getCurrentRound();
-		sendGameInfo(r != null ? r.getCurrentPosition() : 0);
+		sendGameInfo(false);
 	}
 
 	/**
@@ -726,19 +726,51 @@ final class Game {
 	private PlayerInfo buildPlayerInfo(final Player p) {
 		final PlayRound r = getCurrentRound();
 		final PlayerInfo pi = new PlayerInfo();
-		pi.setAufspieler(aufspieler != null ? aufspieler.getUsername() : "");
+		pi.setAufspieler(r != null ? r.getAufspieler().getUsername() : "");
 		pi.setGeber(geber != null ? geber.getUsername() : "");
-		pi.setActive(r != null && r.getCurrentPosition() == p.getPosition());
+		pi.setActive(p.equals(this.activePlayer));
 		pi.setKarten(buildCardInfo());
 		pi.setPlayerId(p.getId());
 		pi.setPosition(p.getPosition());
-		pi.setPunkte(p.getPoints());
+		pi.setTotalpunkte(countTotalPoints(p));
+		pi.setPunkte(getRoundPoints(p));
 		pi.setName(p.getUsername());
 		pi.setRunde(r == null ? 0 : r.getNr());
 		pi.setTrumpf(trumpfFarbe);
 		return pi;
 	}
 
+	private int getRoundPoints(Player p) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private int getTotalGamePoints(Player p) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	private int countTotalPoints(Player p) {
+		int points = 0;
+		for (PlayRound r : this.playrounds) {
+			if (r.getWinner() == p)
+				points += getRoundPoints(p);
+		}
+		return points;
+	}
+
+	private int getMaxGamePoints() {
+		int points = 0;
+		for (Player p : player) {
+			int n = countTotalPoints(p);
+			if (n > points) {
+				points = n;
+			}
+		}
+		return points;
+	}
+
+	
 	private List<CardInfo> buildCardInfo() {
 
 		final List<CardInfo> playercards = new ArrayList<>();
@@ -749,7 +781,7 @@ final class Game {
 			ci.setKarte(card.getKarte());
 			ci.setOffen(card.getOwner() != null && !card.getOwner().isComputer());
 			ci.setPlayerPosition(card.getOwner() != null ? card.getOwner().getPosition() : 0);
-			ci.setRoundPosition(0);
+			//ci.setRoundPosition(0);
 
 			CardPlace location = CardPlace.Invisible; // Karte bereits gespielt
 
@@ -762,8 +794,8 @@ final class Game {
 			}
 			if (location == CardPlace.Invisible && isCardInCurrentRound(card)) {
 				location = CardPlace.Bid; // im aktuellen Stich
-				ci.setRoundPosition(card.getRoundPosition());
-				roundCards.put(card.getRoundPosition(), ci);
+				//ci.setRoundPosition(card.getRoundPosition());
+				roundCards.put(card.getBidNr(), ci);
 			}
 			if (location == CardPlace.Invisible && card.getOwner() == null) {
 				location = CardPlace.Stock; // im Stapel
