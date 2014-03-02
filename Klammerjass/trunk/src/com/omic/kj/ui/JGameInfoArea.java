@@ -13,6 +13,9 @@ import java.util.List;
 import javax.swing.JComponent;
 import com.omic.kj.shared.domain.GameHistoryInfo;
 
+/**
+ * Show game history, the last 3 entries
+ */
 public class JGameInfoArea extends JComponent {
 
 	final static Font smallFont = new Font("Bauhaus 93", Font.PLAIN, 16);

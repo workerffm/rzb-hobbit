@@ -3,44 +3,46 @@ package com.omic.kj.shared.domain;
 /**
  * used for client side rendering
  */
-public class CardInfo { 
+public class CardInfo {
 
-	private Karte karte;
+	private final Karte karte;
 	private boolean offen;
 	private CardPlace cardPlace;
 	private int playerPosition; // Spieler Position 1-4
 
-	public Karte getKarte() {
-		return karte;
+	public CardInfo(Karte karte) {
+		this.karte = karte;
 	}
 
-	public void setKarte(Karte karte) {
-		this.karte = karte;
+	public Karte getKarte() {
+		return karte;
 	}
 
 	public boolean getOffen() {
 		return offen;
 	}
 
-	public void setOffen(boolean offen) {
+	public CardInfo setOffen(boolean offen) {
 		this.offen = offen;
+		return this;
 	}
 
 	public CardPlace getCardPlace() {
 		return cardPlace;
 	}
 
-	public void setCardPlace(CardPlace cardPlace) {
+	public CardInfo setCardPlace(CardPlace cardPlace) {
 		this.cardPlace = cardPlace;
+		return this;
 	}
 
 	public int getPlayerPosition() {
 		return playerPosition;
 	}
 
-	public void setPlayerPosition(int playerPosition) {
+	public CardInfo setPlayerPosition(int playerPosition) {
 		this.playerPosition = playerPosition;
+		return this;
 	}
-
 
 }

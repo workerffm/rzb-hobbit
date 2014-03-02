@@ -35,15 +35,6 @@ class MainFrame extends JFrame {
 
 	public void start() throws Exception {
 		setTitle("Klammern V0.4");
-		/*
-		cardLayout = new CardLayout();
-		cardPanel = new JPanel(cardLayout);
-		cardPanel.add("intro", createIntroScreen());
-		cardPanel.add("options", createOptionsScreen());
-		cardPanel.add("game", createGameScreen());
-		getContentPane().setLayout(new BorderLayout());
-		getContentPane().add(cardPanel);
-		*/
 
 		final GraphicsDevice myDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		if (false && myDevice.isFullScreenSupported()){
@@ -55,6 +46,15 @@ class MainFrame extends JFrame {
 			setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
 		}
 		
+//		gamedesk = new JGamePanel();
+//		cardLayout = new CardLayout();
+//		cardPanel = new JPanel(cardLayout);
+//		cardPanel.add("intro", createIntroScreen());
+//		cardPanel.add("options", createOptionsScreen());
+//		cardPanel.add("game", gamedesk);
+//		getContentPane().setLayout(new BorderLayout());
+//		getContentPane().add(cardPanel);
+//		
 		gamedesk = new JGamePanel();
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(gamedesk);
