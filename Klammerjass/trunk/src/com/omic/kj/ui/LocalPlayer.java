@@ -1,6 +1,8 @@
 package com.omic.kj.ui;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,7 @@ import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.shared.domain.PlayerResponse;
 import com.omic.kj.shared.domain.ResponseCode;
 import com.omic.kj.shared.domain.User;
+import com.omic.kj.shared.game.PlayRules;
 
 class LocalPlayer implements PlayerCommandListener {
 
@@ -30,6 +33,8 @@ class LocalPlayer implements PlayerCommandListener {
 	private User user;
 	private int maxPlayer;
 	private final Map<Integer, List<CardInfo>> cardsPerPlace;
+	private Comparator<CardInfo> cardSorter;
+
 
 	LocalPlayer() {
 		cardsPerPlace = new HashMap<>();
@@ -59,7 +64,11 @@ class LocalPlayer implements PlayerCommandListener {
 				//log.info("game command received: " + command.getCommandCode().toString());
 
 				switch (command.getCommandCode()) {
-				case gameinfo: {
+				case gameReset: {
+					cardSorter = null;
+					break;
+				}
+				case gameInfo: {
 					showGameInfo(command.getGameInfo());
 					break;
 				}
@@ -188,11 +197,18 @@ class LocalPlayer implements PlayerCommandListener {
 			}
 		}
 
+		if (cardSorter==null && info.getTrumpf()!=null){
+			cardSorter = new CardInfoSorter (info.getTrumpf());
+		}
 		// Now put the cards on the table....
 		gamedesk.setStatus(info);
 		gamedesk.setOriginalPosition(originalPosition);
 		for (Integer place : cardsPerPlace.keySet()) {
-			gamedesk.setCards(place, cardsPerPlace.get(place));
+			List<CardInfo> cards = cardsPerPlace.get(place);
+			if(place.intValue()==1 && cardSorter!=null) {
+				Collections.sort(cards,cardSorter);
+			}
+			gamedesk.setCards(place, cards);
 			pause();
 		}
 	}

@@ -1,16 +1,15 @@
 package com.omic.kj.shared.domain;
 
-public class GameHistory {
-	public GameHistory(int gameNr, int points, String winner) {
-		this.setGameNr(gameNr);
+public class GameHistoryInfo {
+  private int points;
+  private String winner;
+  private int spielNr;
+
+  public GameHistoryInfo(int spielNr, int points, String winner) {
+		this.spielNr = spielNr;
 		this.points = points;
 		this.winner = winner;
 	}
-	private int gameNr;
-	private int points;
-	private String winner;
-
-	
 	public int getPoints() {
 		return points;
 	}
@@ -23,10 +22,11 @@ public class GameHistory {
 	public void setWinner(String winner) {
 		this.winner = winner;
 	}
-	public int getGameNr() {
-		return gameNr;
+	public int getSpielNr() {
+		return spielNr;
 	}
-	public void setGameNr(int gameNr) {
-		this.gameNr = gameNr;
+	public void setSpielNr(int spielNr) {
+		this.spielNr = spielNr;
 	}
+	
 }

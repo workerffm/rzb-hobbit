@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,7 +34,7 @@ class MainFrame extends JFrame {
 	}
 
 	public void start() throws Exception {
-		setTitle("Klammerjass V0.3");
+		setTitle("Klammern V0.4");
 		/*
 		cardLayout = new CardLayout();
 		cardPanel = new JPanel(cardLayout);
@@ -43,14 +45,21 @@ class MainFrame extends JFrame {
 		getContentPane().add(cardPanel);
 		*/
 
+		final GraphicsDevice myDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		if (false && myDevice.isFullScreenSupported()){
+			setUndecorated(true);
+			myDevice.setFullScreenWindow(this);
+		}
+		else {
+			setSize(900, 900);
+			setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
+		}
+		
 		gamedesk = new JGamePanel();
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(gamedesk);
-		pack();
-		setSize(900,900);
-		setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
+
 		setVisible(true);
-		
 		startGame();
 	}
 
@@ -94,18 +103,18 @@ class MainFrame extends JFrame {
 		p.setLayout(tl);
 
 		final JLabel lName, lGegner, lPunkte;
-	
+
 		final JButton btnOk;
 		lName = new JLabel("Dein Name:");
 		lGegner = new JLabel("Mitspieler:");
 		lPunkte = new JLabel("Max. Punkte:");
 		tfName = new JTextField();
-		
+
 		final NumberFormat fGegner = NumberFormat.getIntegerInstance();
 		fGegner.setMinimumIntegerDigits(3);
 		fGegner.setMaximumIntegerDigits(3);
 		tfGegner = new JFormattedTextField(fGegner);
-		
+
 		final NumberFormat fPunkte = NumberFormat.getIntegerInstance();
 		fPunkte.setMinimumIntegerDigits(300);
 		fPunkte.setMaximumIntegerDigits(3000);
@@ -136,12 +145,12 @@ class MainFrame extends JFrame {
 	private void startGame() {
 		try {
 			//GameSettings settings = new GameSettings(true, getInt(tfGegner), getInt(tfPunkte));
-			final GameSettings settings = new GameSettings(true, 3,222);
+			final GameSettings settings = new GameSettings(true, 3, 222);
 
 			final LocalPlayer g = new LocalPlayer();
 			g.setGameDesk(this.gamedesk);
 			g.run(settings);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

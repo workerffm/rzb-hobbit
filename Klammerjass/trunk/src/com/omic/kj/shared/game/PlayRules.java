@@ -1,4 +1,4 @@
-package com.omic.kj.ui;
+package com.omic.kj.shared.game;
 
 import java.util.List;
 import com.omic.kj.shared.domain.Farbe;
@@ -11,19 +11,13 @@ public class PlayRules {
    * Return true, if the card is allowed to play out.
 	 */
 	public static boolean isValidToPlay(Karte selectedCard, List<Karte> hardCards, List<Karte> roundCards, Farbe trumpf) {
+		
+		// Selbst rauskommen?
 		if(roundCards==null || roundCards.size()==0)
 			return true;
 		
-		// ermittle hˆchsten Trumpf im Stich?
-		Karte maxTrumpfImStich = null;
-		for(Karte g:roundCards) {
-			if(g.getFarbe() == trumpf) {
-				if(maxTrumpfImStich==null || g.getRank() > maxTrumpfImStich.getRank())
-					maxTrumpfImStich = g;
-			}
-		}
-		Karte karte1 = roundCards.get(0);
-		if (maxTrumpfImStich==null) {
+		final Karte karte1 = roundCards.get(0);
+		if(karte1.getFarbe()!=trumpf){
 			if (selectedCard.getFarbe() == karte1.getFarbe()){
 				return true;
 			}
@@ -47,17 +41,30 @@ public class PlayRules {
 		if(!hatNochFarbe(hardCards, karte1) && !hatNochFarbe(hardCards, trumpf)){
 		  return true;
 		}
+
+		// ermittle hˆchsten Trumpf im Stich?
+		Karte maxTrumpfImStich = null;
+		for(Karte g:roundCards) {
+			if(g.getFarbe() == trumpf) {
+				if(maxTrumpfImStich==null || g.getRank(trumpf) > maxTrumpfImStich.getRank(trumpf))
+					maxTrumpfImStich = g;
+			}
+		}
+
 		// Es muﬂ ¸bertrumpft werden
-		//if(maxTrumpfImStich!=null){
-			if (selectedCard.getRank() > maxTrumpfImStich.getRank())
+		if(maxTrumpfImStich!=null){
+			if (selectedCard.getRank(trumpf) > maxTrumpfImStich.getRank(trumpf))
 			  return true;
 			else if (selectedCard.getFarbe()==trumpf) {
 				// muﬂ untertrumpfen
 				return true;
 			}
-			return false;
-		//}
-		//return true;
+			else if (hatNochFarbe(hardCards, trumpf)) {
+				return false;
+			}
+			return true;
+		}
+		return true;
 	}
 
 	private static boolean hatNochFarbe(List<Karte> hardCards, Farbe f) {

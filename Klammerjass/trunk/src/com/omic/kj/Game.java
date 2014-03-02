@@ -10,18 +10,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.CardPlace;
 import com.omic.kj.shared.domain.CommandCode;
 import com.omic.kj.shared.domain.Farbe;
-import com.omic.kj.shared.domain.GameHistory;
+import com.omic.kj.shared.domain.GameHistoryInfo;
 import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.GameSettings;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.Kartenwert;
 import com.omic.kj.shared.domain.MessageInfo;
-import com.omic.kj.shared.domain.Player;
 import com.omic.kj.shared.domain.PlayerCommand;
 import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.shared.domain.PlayerResponse;
@@ -31,66 +31,74 @@ final class Game {
 
 	private final Logger log = Logger.getLogger("Game");
 
-	private int gameId; // identifier for compare method
-	private String gameName;
-	private int maxSessionPoints; // Spielende bei diesen Punkten
-
 	private CommandListener commandListener; // send player command to this listener!
 	private final ArrayBlockingQueue<GameEvent> eventQueue;
-	private GameState gameState; // aktuelle Phase
 
+	/** Game session data : */
+	private int gameId; // identifier for compare method
+	private int maxSessionPoints; // Spielende bei diesen Punkten
+	private GameState gameState; // aktuelle Phase
 	private final List<Player> player; // 2 to 4 players per game
 	private final Set<ComputerPlayer> computerPlayer; // save extra the auto player
 	private final List<GameHistory> gameHistory;
+	private final AtomicInteger partieNr; // Partiezähler für die History
+	private final AtomicInteger rundenNr; // Rundenzähler für die History
+	private final AtomicInteger spielNr;  // Spielzähler für die History
+	/** Game session data : */
 
-	/** Game transaction data : */
-	private List<PlayCard> playcards; // 32 cards with special tags on it
-	private Date start, end; // game duration
-	private Farbe trumpfFarbe; // Trumpffarbe
+	/** Spiel TX data */
+	private Date start, end; // Spieldauer
 	private Player geber; // Kartengeber
 	private Player trumpfPlayer; // Spieler der original oder kleines spielt.
+	private Player activePlayer;
+	private Farbe trumpfFarbe; // Trumpffarbe
 	private Karte original; // Die umgedrehte Karte beim Geben, für alle sichtbar.
 	private boolean originalSelected; // trumpfPlayer wählte original
-	private Player gameWinner; // Spielgewinner
-	private int nextRoundNr; // Rundennummer
-	private final List<PlayRound> playrounds;
-	private int gameNr; // Spielzähler für die History
-	private Player activePlayer;
+	private final AtomicInteger stichNr;
+	private final List<PlayCard> playcards; // 32 cards with special tags on it
+	private final List<Stich> stiche;
+	private int beet;
+	/**  Spiel TX data  */
 
-	/** Game transaction data */
+	public Game() {
+		this.player = new ArrayList<>();
+		this.computerPlayer = new HashSet<>();
+		this.gameHistory = new ArrayList<>();
+		this.stiche = new ArrayList<>();
+		this.eventQueue = new ArrayBlockingQueue<>(50);
+		this.partieNr = new AtomicInteger(1); 
+		this.rundenNr = new AtomicInteger(1);
+		this.spielNr = new AtomicInteger(1);
+		this.stichNr = new AtomicInteger(1);
+		// Karten frisch initialisieren.
+		ArrayList<PlayCard> cards = new ArrayList<PlayCard>();
+		for (Karte c : Karte.values()) {
+			PlayCard p = new PlayCard(c);
+			cards.add(p);
+		}
+		this.playcards = (Collections.unmodifiableList(cards));
+	}
 
-	private void resetGame() {
-		//gameWinner = null;
+	private void resetSpiel() {
 		trumpfFarbe = null;
 		geber = null;
 		activePlayer = null;
 		trumpfPlayer = null;
 		original = null;
 		originalSelected = false;
-		nextRoundNr = 0;
-		playrounds.clear();
-
+		stiche.clear();
+		stichNr.set(1);
 		for (PlayCard c : playcards) {
 			c.setOwner(null);
-			c.setRoundNr(0);
+			c.setStichNr(0);
 			c.setBidNr(0);
 		}
-	}
-
-	public Game() {
-		this.player = new ArrayList<>();
-		this.computerPlayer = new HashSet<>();
-		this.gameHistory = new ArrayList<>();
-		this.playrounds = new ArrayList<>();
-		this.eventQueue = new ArrayBlockingQueue<>(50);
 	}
 
 	public void joinGame(final Player p, final GameSettings gs) throws Exception {
 		final int playerCount = player.size();
 		if (playerCount < 4) {
-			p.setPosition(playerCount + 1);
 			player.add(p);
-			/** TODO: Position/Lücke beachten ! */
 			if (gs != null) {
 				setLimit(gs.getMaximumPoints());
 			}
@@ -136,10 +144,7 @@ final class Game {
 
 		// FIRST TIME INITIALIZATION
 		//
-		loadCards();
-		start = new Date();
-		gameName = "Game " + gameId;
-		gameNr = 0;
+		Thread.currentThread().setName("Game "+this.gameId);
 		gotoGameState(GameState.G0);
 
 		// LOOP FOR 4 PLAYER !!
@@ -147,7 +152,7 @@ final class Game {
 		for (;;) {
 
 			final GameEvent event = getNextEvent(20000);
-			Thread.sleep(50);
+			pause(50);
 
 			if (event == null) {
 				log.info("State=" + gameState + ", waiting for events");
@@ -163,10 +168,15 @@ final class Game {
 
 			// -----------------------------------------------------------
 			case G0: {
-				resetGame();
-				gameNr++;
-				nextRoundNr = 1;
+				resetSpiel();
+				start = new Date();
 				selectGeber();
+				
+				// Reset clients
+				final PlayerCommand pc = new PlayerCommand();
+				sendCommandToAllPlayer(CommandCode.gameReset);
+				
+				// Initialize clients
 				sendGameInfo();
 				// 3 Karten für jeden
 				for (int i = 0; i < 3; i++) {
@@ -405,17 +415,16 @@ final class Game {
 					gotoGameState(GameState.S4);
 				} else {
 					// Neue Runde starten
-					final PlayRound newRound = new PlayRound();
-					newRound.setNr(nextRoundNr);
-					newRound.setBidNr(0);
+					final Stich newRound = new Stich();
+					newRound.setNr(stichNr.getAndIncrement());
+					newRound.setCount(0);
 					// In der 1. Runde spielt der Nebenmann auf:
-					if (newRound.getNr() == 1) {
-						newRound.setAufspieler(getPlayerLeftFromGeber(+1));
+					if (newRound.getStichNr() == 1) {
+						newRound.setStarter(getPlayerLeftFromGeber(+1));
 					} else {
-						newRound.setAufspieler(getCurrentRound().getWinner());
+						newRound.setStarter(getCurrentStich().getWinner());
 					}
-					nextRoundNr++;
-					playrounds.add(newRound);
+					stiche.add(newRound);
 					// Prepare next step and send out game info 
 					gotoGameState(GameState.S2);
 				}
@@ -423,10 +432,10 @@ final class Game {
 			}
 			// -----------------------------------------------------------
 			case S2: {
-				final PlayRound r = getCurrentRound();
+				final Stich r = getCurrentStich();
 				// Nächster Spieler im Uhrzeigersinn:
-				final Player p = getPlayerLeftFrom(r.getAufspieler(), r.getBidNr());
-				setActivePlayer(p);
+				final Player p = getPlayerLeftFrom(r.getStarter(), r.getCount());
+				this.activePlayer = p;
 				sendGameInfo(false);
 				sendPlayerInfo();
 				sendPlayerCommand(p, CommandCode.spieleKarte, new ResponseCode[] { ResponseCode.play });
@@ -441,29 +450,28 @@ final class Game {
 
 						final PlayCard c = getCard(response.getGespielteKarte());
 						final Player p = getPlayerById(response.getPlayerId());
-						final PlayRound r = getCurrentRound();
+						final Stich r = getCurrentStich();
 
 						if (c == null)
 							throw new Exception("card not found: " + response.getGespielteKarte());
 						if (p == null)
 							throw new Exception("player not found: " + response.getPlayerId());
 
-						c.setBidNr(r.getBidNr());
-						c.setRoundNr(r.getNr());
+						c.setBidNr(r.getCount());
+						c.setStichNr(r.getStichNr());
 
 						// TODO: Terz check
 						// TODO: Bella check ...
 						sendPlayerInfo();
 
-						if (r.getBidNr() >= playerCount - 1) {
+						if (r.getCount() >= playerCount - 1) {
 							// Runde ist beendet
 							calculatePointsInRound(r);
-							//aufspieler = r.getWinner();
-							log.info("ROUND finished: " + r.toString());
+							log.info("Stich Ende: " + r.toString());
 							gotoGameState(GameState.S1);
 						} else {
 							// Weiter auf nächste Karte warten
-							r.setBidNr(r.getBidNr() + 1);
+							r.setCount(r.getCount() + 1);
 							gotoGameState(GameState.S2);
 						}
 					}
@@ -472,23 +480,11 @@ final class Game {
 			}
 			// -----------------------------------------------------------
 			case S4: {
+				
 				// Spielende, Gesamtpunkte, Gewinner berechnen.
-				Player gameWinner = null;
-				int gamePoints = 0;
-				for (Player p : player) {
-					final int n = getTotalGamePoints(p);
-					if (gameWinner == null || n > gamePoints) {
-						gameWinner = p;
-						gamePoints = n;
-					}
-				}
-				this.gameWinner = gameWinner;
+				createGameHistoryRecord();
 
-				// Record the game
-				final GameHistory h = new GameHistory(this.gameNr, gamePoints, this.gameWinner.getUsername());
-				gameHistory.add(h);
-
-				if (getMaxGamePoints() >= maxSessionPoints) {
+				if (this.spielNr.get() == 9) {
 					sendGameInfo();
 					gotoGameState(GameState.GOV);
 				} else {
@@ -506,7 +502,15 @@ final class Game {
 				}
 				sendPlayerInfo();
 				sendGameInfo(true);
+				
+				// Prepare next game:
+				spielNr.incrementAndGet();
+        /** TODO: prüfe neue Runde?
+         * TODO: prüfe Holz, ... 
+         */
+				
 				// Restart Game:
+				pause(1000);
 				gotoGameState(GameState.G0);
 				break;
 			}
@@ -540,48 +544,123 @@ final class Game {
 		}
 	}
 
-	private void setActivePlayer(Player p) {
-		this.activePlayer = p;
+	/**
+	 * Alle Punkte merken, für Team 1+2 aufsummieren: <br>
+	 * Team 1: Spieler 1 + 3 <br>
+	 * Team 2: Spieler 2 + 4 <br>
+	 */
+	private void createGameHistoryRecord() {
+		final GameHistory h = new GameHistory(
+				this.partieNr.get(),
+				this.rundenNr.get(),
+				this.spielNr.get(),
+				this.start, 
+				this.end, 
+				this.geber,
+				this.trumpfPlayer,
+				this.trumpfFarbe,
+				this.beet
+				);
+
+		int teamPoints1 = 0, teamPoints2=0;
+		for (Player p : player) {
+			if(p.getPosition()==1) {
+				int pts=sumPoints(p);
+				h.setPlayerName1(p.getUsername());
+				h.setPlayerPoints1(pts);
+				teamPoints1 += pts;
+			}
+			else if(p.getPosition()==2) {
+				int pts=sumPoints(p);
+				h.setPlayerName2(p.getUsername());
+				h.setPlayerPoints2(pts);
+				teamPoints2 += pts;
+			}
+			else if(p.getPosition()==3) {
+				int pts=sumPoints(p);
+				h.setPlayerName3(p.getUsername());
+				h.setPlayerPoints3(pts);
+				teamPoints1 += pts;
+			}
+			else if(p.getPosition()==4) {
+				int pts=sumPoints(p);
+				h.setPlayerName4(p.getUsername());
+				h.setPlayerPoints4(pts);
+				teamPoints2 += pts;
+			}
+		}
+		h.setTeamPoints1(teamPoints1);
+		h.setTeamPoints2(teamPoints2);
+		// Team 1 hat gespielt
+		if(this.trumpfPlayer.getTeamId()==1) {
+			if(teamPoints1>teamPoints2)
+			  h.setTeamGew1(1);
+			else
+			  h.setTeamGew2(2);  // TODO: Bei Kontra 4 !!
+		}
+		// Team 2 hat gespielt
+		else if(this.trumpfPlayer.getTeamId()==2) {
+			if(teamPoints2>teamPoints1)
+			  h.setTeamGew2(1);
+			else
+			  h.setTeamGew1(2);  // TODO: Bei Kontra 4 !!
+		}
+		this.gameHistory.add(h);
 	}
 
+
+	private final StichSorter stichSorter = new StichSorter();
+	
 	/**
 		* - Stichgewinner ermitteln
 	  * - Mitspieler im gleichen Team ermitteln
 	  * - Punkte zählen und allen im Team addieren
 	  */
-	private void calculatePointsInRound(final PlayRound round) {
-		Player winner = null;
-		PlayCard winnerCard = null;
-		int points = 0;
+	private void calculatePointsInRound(final Stich stich) {
+		
+		final List<PlayCard> stichcards = new ArrayList<>();
 		for (PlayCard c : playcards) {
-			if (c.getRoundNr() == round.getNr()) {
-				if (winner == null) {
-					winner = c.getOwner();
-					winnerCard = c;
-				} else {
-					int r1 = winnerCard.getRank(trumpfFarbe);
-					int r2 = c.getRank(trumpfFarbe);
-					if (r2 > r1) {
-						winner = c.getOwner();
-						winnerCard = c;
-					}
-				}
-				points += c.getPoints();
-				// Zusatzgewinne
-				// 1) Jass
-				if (c.isJass(trumpfFarbe)) {
-					points += 20;
-				}
-				// 2) Mie
-				if (c.isMie(trumpfFarbe)) {
-					points += 14;
-				}
+			if (c.getStichNr() == stich.getStichNr()) {
+				stichcards.add(c);
 			}
 		}
-		round.setWinner(winner);
-		round.setPoints(points);
-		//winner.setRoundPoints(points);
-		log.fine("Round " + round.getNr() + ": " + points + " points for player " + winner.getUsername());
+		
+		// Nach Spielreihenfolge sortieren
+		Collections.sort(stichcards, this.stichSorter);
+		
+		// Erste Karte merken
+		final PlayCard karte1 = stichcards.get(0);
+		PlayCard winnerCard = null;
+		Player winner = null;
+		int points = 0;
+		
+		for (PlayCard c : stichcards) {
+			if (winner == null) {
+				winner = karte1.getOwner();
+				winnerCard = karte1;
+			} else {
+				int r1 = winnerCard.getRank(trumpfFarbe);
+				// Abgeworfen, dann rank 0
+				int r2 = c.getFarbe()!=karte1.getFarbe() && c.getFarbe()!=trumpfFarbe ? 0 : c.getRank(trumpfFarbe);
+				if (r2 > r1) {
+					winner = c.getOwner();
+					winnerCard = c;
+				}
+			}
+			points += c.getPoints();
+			// Zusatzgewinne
+			// 1) Jass
+			if (c.isJass(trumpfFarbe)) {
+				points += 20;
+			}
+			// 2) Mie
+			if (c.isMie(trumpfFarbe)) {
+				points += 14;
+			}
+		}
+		stich.setWinner(winner);
+		stich.setPoints(points);
+		log.info("Round " + stich.getStichNr() + ": " + points + " points for player " + winner.getUsername()+", stich="+stichcards);
 	}
 
 	/**
@@ -590,7 +669,7 @@ final class Game {
 	 */
 	private boolean areCardsAvailable() {
 		for (PlayCard c : playcards) {
-			if (c.getOwner() != null && c.getRoundNr() == 0) {
+			if (c.getOwner() != null && c.getStichNr() == 0) {
 				return true;
 			}
 		}
@@ -632,7 +711,8 @@ final class Game {
 	* Kurzversion: per Zufall. 
 	*/
 	public void selectGeber() {
-		this.geber = player.iterator().next();
+		int n=Math.abs((int) System.currentTimeMillis());
+		this.geber = player.get(n%player.size());
 	}
 
 	/**
@@ -666,14 +746,16 @@ final class Game {
 		gameInfo.setPlayerInfo(playerInfo);
 		gameInfo.setMaxPoints(this.maxSessionPoints);
 		// Send the last history if the game is finished only:
-		gameInfo.setGameHistory(withGameHistory && gameHistory.size() > 0 ? gameHistory.get(gameHistory.size() - 1) : null);
-		final PlayRound r = getCurrentRound();
+		if(withGameHistory) {
+			gameInfo.setGameHistory(buildGameHistory());
+		}
+		final Stich r = getCurrentStich();
 		gameInfo.setActivePlayerPosition(activePlayerPosition);
 		// Send to all players
 		for (Player p : player) {
 			final PlayerCommand pc = new PlayerCommand();
 			pc.setGameId(gameId);
-			pc.setCommandCode(CommandCode.gameinfo);
+			pc.setCommandCode(CommandCode.gameInfo);
 			pc.setGameInfo(gameInfo);
 			pc.setPlayerId(p.getId());
 			this.commandListener.toPlayer(pc);
@@ -684,6 +766,16 @@ final class Game {
 		sendGameInfo(false);
 	}
 
+	private void sendCommandToAllPlayer(final CommandCode commandCode){
+		for (Player p : player) {
+			final PlayerCommand pc = new PlayerCommand();
+			pc.setCommandCode(commandCode);
+			pc.setGameId(gameId);
+			pc.setPlayerId(p.getId());
+			this.commandListener.toPlayer(pc);
+		}
+	}
+	
 	/**
 	 * Distribute current player info to all other player
 	 */
@@ -724,56 +816,44 @@ final class Game {
 	}
 
 	private PlayerInfo buildPlayerInfo(final Player p) {
-		final PlayRound r = getCurrentRound();
-		final PlayerInfo pi = new PlayerInfo();
-		pi.setAufspieler(r != null ? r.getAufspieler().getUsername() : "");
-		pi.setGeber(geber != null ? geber.getUsername() : "");
-		pi.setActive(p.equals(this.activePlayer));
-		pi.setKarten(buildCardInfo());
-		pi.setPlayerId(p.getId());
-		pi.setPosition(p.getPosition());
-		pi.setTotalpunkte(countTotalPoints(p));
-		pi.setPunkte(getRoundPoints(p));
-		pi.setName(p.getUsername());
-		pi.setRunde(r == null ? 0 : r.getNr());
-		pi.setTrumpf(trumpfFarbe);
-		return pi;
+		final PlayerInfo info = new PlayerInfo();
+		final Stich r = getCurrentStich();
+		info.setAufspieler(r != null ? r.getStarter().getUsername() : "");
+		info.setGeber(geber != null ? geber.getUsername() : "");
+		info.setActive(p.equals(this.activePlayer));
+		info.setKarten(buildCardInfo());
+		info.setPlayerId(p.getId());
+		info.setPosition(p.getPosition());
+		info.setKleinesHolz(0);
+		info.setGrossesHolz(0);
+		info.setPunkte(sumPoints(p));
+		info.setName(p.getUsername());
+		info.setRunde(r == null ? 0 : r.getStichNr());
+		info.setTrumpf(trumpfFarbe);
+		return info;
 	}
 
-	private int getRoundPoints(Player p) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 
-	private int getTotalGamePoints(Player p) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
-	private int countTotalPoints(Player p) {
-		int points = 0;
-		for (PlayRound r : this.playrounds) {
-			if (r.getWinner() == p)
-				points += getRoundPoints(p);
-		}
-		return points;
-	}
-
-	private int getMaxGamePoints() {
-		int points = 0;
-		for (Player p : player) {
-			int n = countTotalPoints(p);
-			if (n > points) {
-				points = n;
+	private List<GameHistoryInfo> buildGameHistory() {
+		final List<GameHistoryInfo> info = new ArrayList<>();
+		int points1=0, points2=0, n=0;
+		for (GameHistory h:this.gameHistory) {
+			if(n>this.gameHistory.size()-3) {
+				GameHistoryInfo i;
+				if(h.getTeamGew1()>0) {
+				  info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints1(), "Team 1"));
+				}
+				else if(h.getTeamGew2()>0) {
+				  info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints2(), "Team 2"));
+				}
 			}
 		}
-		return points;
+		return info;
 	}
-
 	
 	private List<CardInfo> buildCardInfo() {
 
-		final List<CardInfo> playercards = new ArrayList<>();
+		final List<CardInfo> info = new ArrayList<>();
 		final Map<Integer, CardInfo> roundCards = new HashMap<>();
 
 		for (final PlayCard card : playcards) {
@@ -781,7 +861,6 @@ final class Game {
 			ci.setKarte(card.getKarte());
 			ci.setOffen(card.getOwner() != null && !card.getOwner().isComputer());
 			ci.setPlayerPosition(card.getOwner() != null ? card.getOwner().getPosition() : 0);
-			//ci.setRoundPosition(0);
 
 			CardPlace location = CardPlace.Invisible; // Karte bereits gespielt
 
@@ -794,27 +873,35 @@ final class Game {
 			}
 			if (location == CardPlace.Invisible && isCardInCurrentRound(card)) {
 				location = CardPlace.Bid; // im aktuellen Stich
-				//ci.setRoundPosition(card.getRoundPosition());
 				roundCards.put(card.getBidNr(), ci);
 			}
 			if (location == CardPlace.Invisible && card.getOwner() == null) {
 				location = CardPlace.Stock; // im Stapel
 			}
-			if (location == CardPlace.Invisible && card.getOwner() != null && card.getRoundNr() == 0) {
+			if (location == CardPlace.Invisible && card.getOwner() != null && card.getStichNr() == 0) {
 				location = CardPlace.Hand; // Hand, nicht gespielt
 			}
 			ci.setCardPlace(location);
-			playercards.add(ci);
+			info.add(ci);
 		}
 		// Integrate cards from bid in correct order
-		playercards.removeAll(roundCards.values());
-		playercards.addAll(roundCards.values());
-		return playercards;
+		info.removeAll(roundCards.values());
+		info.addAll(roundCards.values());
+		return info;
+	}
+
+	private int sumPoints(Player p) {
+		int points = 0;
+		for (Stich r : this.stiche) {
+			if (r.getWinner() == p)
+				points += r.getPoints();
+		}
+		return points;
 	}
 
 	private boolean isCardInCurrentRound(PlayCard pc) {
-		final PlayRound r = getCurrentRound();
-		return (r != null && r.getNr() == pc.getRoundNr());
+		final Stich r = getCurrentStich();
+		return (r != null && r.getStichNr() == pc.getStichNr());
 	}
 
 	private Set<CardInfo> getCardsOnHand(Player p) {
@@ -830,8 +917,8 @@ final class Game {
 		return playercards;
 	}
 
-	private PlayRound getCurrentRound() {
-		return playrounds.size() > 0 ? playrounds.get(playrounds.size() - 1) : null;
+	private Stich getCurrentStich() {
+		return stiche.size() > 0 ? stiche.get(stiche.size() - 1) : null;
 	}
 
 	private void sayHello() {
@@ -859,21 +946,6 @@ final class Game {
 		}
 	}
 
-	/**
-	* Karten frisch initialisieren.
-	*/
-	private void loadCards() {
-		ArrayList<PlayCard> cards = new ArrayList<PlayCard>();
-		for (Karte c : Karte.values()) {
-			PlayCard p = new PlayCard(c);
-			cards.add(p);
-		}
-		setCards(Collections.unmodifiableList(cards));
-	}
-
-	private void setCards(List<PlayCard> playCards) {
-		this.playcards = playCards;
-	}
 
 	public void setGameId(int gameId) {
 		this.gameId = gameId;
@@ -898,6 +970,10 @@ final class Game {
 
 	private GameEvent getNextEvent(int timeout_ms) throws InterruptedException {
 		return this.eventQueue.poll(timeout_ms, TimeUnit.MILLISECONDS);
+	}
+
+	private void pause(int ms) throws InterruptedException {
+		Thread.sleep(ms);
 	}
 
 }

@@ -3,7 +3,7 @@ package com.omic.kj.shared.domain;
 /**
  * used for client side rendering
  */
-public class CardInfo implements Comparable<CardInfo> {
+public class CardInfo { 
 
 	private Karte karte;
 	private boolean offen;
@@ -42,13 +42,5 @@ public class CardInfo implements Comparable<CardInfo> {
 		this.playerPosition = playerPosition;
 	}
 
-	@Override
-	public int compareTo(final CardInfo other) {
-		if (karte.getRank() < other.karte.getRank())
-			return -1;
-		if (karte.getRank() > other.karte.getRank())
-			return 1;
-		return 0;
-	}
 
 }

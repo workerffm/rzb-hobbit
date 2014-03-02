@@ -36,14 +36,14 @@ public class JGamePanel extends JPanel {
 		
 		final JPanel playerPanel = new JPanel(new BorderLayout());
 		{
-			b1 = new JButton("Bella");
-			b2 = new JButton("50");
+			b1 = new JButton("Belle");
 			b3 = new JButton("Terz");
+			b2 = new JButton("50");
 			JPanel btnPanel = new JPanel();
 			btnPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			btnPanel.add(Theme.style4(b1));
-			btnPanel.add(Theme.style4(b2));
 			btnPanel.add(Theme.style4(b3));
+			btnPanel.add(Theme.style4(b2));
 			btnPanel.setOpaque(false);
 			playerPanel.add(btnPanel);
 			playerPanel.add(statusPanel, BorderLayout.SOUTH);

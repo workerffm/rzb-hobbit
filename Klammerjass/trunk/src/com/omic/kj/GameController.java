@@ -72,9 +72,8 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 		final Player p = new Player();
 		p.setUsername(username);
 		p.setPosition(1);
-		//p.setRoundPoints(0);
-		p.setSpielbereit(true);
 		p.setTeamId(1);
+		p.setSpielbereit(true);
 		synchronized (this.controllerLock) {
 			p.setId(nextPlayerId);
 			this.activePlayers.add(p);
@@ -114,7 +113,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 	  	  coPlayer.setSpielbereit(true);
 	  	  coPlayer.setComputer(true);
 	  	  coPlayer.setPosition(2+i);
-				
+				coPlayer.setTeamId(coPlayer.getPosition()==1||coPlayer.getPosition()==3 ? 1:2);
 	  	  final ComputerPlayer cp = new ComputerPlayer(coPlayer);
 	  	  cp.setPlayerResponseListener(this); // send response
 	  	  addCommandListener(cp); // get commands
@@ -188,7 +187,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 							//
 							command.setPlayerCommandId(playerCommandId);
 							playerCommandId++;
-							log.fine("CMD "+command.getPlayerCommandId()+" --> "+listener);
+							//log.info("CMD "+command+" --> "+listener);
 							listener.toPlayer(command);
 						}
 					}

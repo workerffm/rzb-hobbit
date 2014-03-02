@@ -1,16 +1,18 @@
-package com.omic.kj.shared.domain;
+package com.omic.kj;
 
-public class Player extends User {
+import com.omic.kj.shared.domain.User;
+
+class Player extends User {
 
 	/** User notified that he is ready to play */
 	private boolean spielbereit;
 
-//	/** Points of current round */
-//	private int roundPoints;
-
 	/** Position on table : 1-4 */
 	private int position;
 
+	/** Team 1: Spieler 1+3, Team 2: Spieler 2+4 */
+	private int teamId;
+	
 	/** is computer player */
 	private boolean computer;
 
@@ -18,6 +20,15 @@ public class Player extends User {
 		super();
 		setSpielbereit(false);
 		position = 0;
+		teamId=0;
+	}
+
+	public int getTeamId() {
+		return teamId;
+	}
+
+	public void setTeamId(int teamId) {
+		this.teamId = teamId;
 	}
 
 	public int getPosition() {
@@ -52,12 +63,9 @@ public class Player extends User {
 		this.computer = computer;
 	}
 
-//	public int getRoundPoints() {
-//		return roundPoints;
-//	}
-//
-//	public void setRoundPoints(int roundPoints) {
-//		this.roundPoints = roundPoints;
-//	}
+	@Override
+	public String toString() {
+		return "Player [position=" + position + ", name=" + getUsername() + "]";
+	}
 
 }

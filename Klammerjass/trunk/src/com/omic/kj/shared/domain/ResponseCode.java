@@ -11,5 +11,5 @@ public enum ResponseCode {
   spieleKarte,
   zeigeFuenfzig,
   zeigeTerz,
-  ok;
-}
+  ok
+};
