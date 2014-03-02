@@ -8,7 +8,7 @@ import java.util.List;
 public class PlayerInfo {
 	private int playerId;
 	private String name;
-	private int position, runde, punkte, gesamtpunkte, spieler;
+	private int position, runde, punkte, spieler, kleinesHolz, grossesHolz;
 	private boolean active;
 	//private boolean trumpfzeigen; // soll spieler die originalkarte offen zeigen?
 	private String geber, aufspieler;
@@ -103,20 +103,21 @@ public class PlayerInfo {
 		this.active = active;
 	}
 
-	public int getTotalpunkte() {
-		return getGesamtpunkte();
+	public int getKleinesHolz() {
+		return kleinesHolz;
 	}
 
-	public void setTotalpunkte(int totalpunkte) {
-		this.setGesamtpunkte(totalpunkte);
+	public void setKleinesHolz(int kleinesHolz) {
+		this.kleinesHolz = kleinesHolz;
 	}
 
-	public int getGesamtpunkte() {
-		return gesamtpunkte;
+	public int getGrossesHolz() {
+		return grossesHolz;
 	}
 
-	public void setGesamtpunkte(int gesamtpunkte) {
-		this.gesamtpunkte = gesamtpunkte;
+	public void setGrossesHolz(int grossesHolz) {
+		this.grossesHolz = grossesHolz;
 	}
+
 
 }

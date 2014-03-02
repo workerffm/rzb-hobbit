@@ -11,7 +11,7 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
-import com.omic.kj.shared.domain.GameHistory;
+import com.omic.kj.shared.domain.GameHistoryInfo;
 
 public class JGameInfoArea extends JComponent {
 
@@ -19,7 +19,7 @@ public class JGameInfoArea extends JComponent {
 	final static Font largeFont = new Font("Bauhaus 93", Font.PLAIN, 24);
 	final static Color bgColor = new Color(0x003399);
 			
-	private final List<GameHistory> gameHistory;
+	private final List<GameHistoryInfo> gameHistory;
 	private String activeGame;
 	private int maxPoints;
 
@@ -30,10 +30,18 @@ public class JGameInfoArea extends JComponent {
 		//add(new GameHistory (1,123,"Sample1"));
 	}
 
-	public void add(GameHistory h) {
-		gameHistory.add(h);
+	public void add(List<GameHistoryInfo> gameHistoryInfos) {
+		gameHistory.clear();
+		gameHistory.addAll(gameHistoryInfos);
 		repaint();
 	}
+	
+
+	public void add(GameHistoryInfo gameHistoryInfo) {
+		gameHistory.add(gameHistoryInfo);
+		repaint();
+	}
+
 	
 	public void setActiveGameInfo (String activeGame, int maxPoints) {
 		this.activeGame = activeGame;
@@ -74,7 +82,7 @@ public class JGameInfoArea extends JComponent {
 		
 		int showMax = 3;
 		for (int i = this.gameHistory.size()-1; i >= 0 && showMax >= 1; i--,showMax--) {
-			final GameHistory hist = this.gameHistory.get(i);
+			final GameHistoryInfo hist = this.gameHistory.get(i);
 			y -= 4;
 			// Frame
 			g.setColor(bgColor);
@@ -84,12 +92,10 @@ public class JGameInfoArea extends JComponent {
 			g.setColor(Color.white);
 			g.setFont(largeFont);
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
-			g.drawString("Spiel " + hist.getGameNr() + " - "+hist.getWinner()+" - "+hist.getPoints(), x + 4, y + 22);
+			g.drawString("Spiel " + hist.getSpielNr() + " - "+hist.getWinner()+" - "+hist.getPoints(), x + 4, y + 22);
 			y -= 28;
 		}
     g.setTransform(saveAT);
 	}
-
-
 
 }

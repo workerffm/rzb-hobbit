@@ -13,7 +13,6 @@ public class PlayerCommand {
   /** Karte 1 vom Stapel, Frage ob diese Farbe gespielt werden soll */
   private Farbe ersteKarte;
   private PlayerInfo playerInfo; 
-//  private RoundInfo roundInfo; 
   private GameInfo gameInfo;
   private MessageInfo messageInfo;
   

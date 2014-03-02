@@ -1,25 +1,24 @@
 package com.omic.kj;
 
-import com.omic.kj.shared.domain.Player;
 
-final class PlayRound {
+final class Stich {
 
 	/** Number of round in the game 1..N */
-	private int nr;
+	private int stichNr;
 
 	/** Number of current bid, 0 .. playercount-1 */
-	private int bidNr;
+	private int count;
 
 	/** Gewinner der Runde */
 	private Player winner;
 
 	/** Spieler der beim aktuellen Stich rausgekommt */
-	private Player aufspieler;
+	private Player starter;
 
 	/** Punkte für die Runde */
 	private int points;
 
-	public PlayRound() {
+	public Stich() {
 	}
 	
 	public Player getWinner() {
@@ -38,28 +37,33 @@ final class PlayRound {
 		this.points = points;
 	}
 
-	public int getNr() {
-		return nr;
+	public int getStichNr() {
+		return stichNr;
 	}
 
 	public void setNr(int roundNr) {
-		this.nr = roundNr;
+		this.stichNr = roundNr;
 	}
 
-	public Player getAufspieler() {
-		return aufspieler;
+	public Player getStarter() {
+		return starter;
 	}
 
-	public void setAufspieler(Player aufspieler) {
-		this.aufspieler = aufspieler;
+	public void setStarter(Player starter) {
+		this.starter = starter;
 	}
 
-	public int getBidNr() {
-		return bidNr;
+	public int getCount() {
+		return count;
 	}
 
-	public void setBidNr(int bidNr) {
-		this.bidNr = bidNr;
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	@Override
+	public String toString() {
+		return "Stich [stichNr=" + stichNr + ", count=" + count + ", winner=" + winner + ", starter=" + starter + ", points=" + points + "]";
 	}
 
 }

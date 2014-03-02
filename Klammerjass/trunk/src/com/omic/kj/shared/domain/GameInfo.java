@@ -8,10 +8,10 @@ import java.util.List;
 public class GameInfo {
 	private int activePlayerPosition;
 	private List<PlayerInfo> playerInfo;
-	private GameHistory gameHistory;
+	private List<GameHistoryInfo> gameHistory;
 	private int maxPoints;
 
-	public GameHistory getGameHistory() {
+	public List<GameHistoryInfo> getGameHistory() {
 		return gameHistory;
 	}
 
@@ -31,7 +31,7 @@ public class GameInfo {
 		this.activePlayerPosition = activePlayerPosition;
 	}
 
-	public void setGameHistory(GameHistory gameHistory) {
+	public void setGameHistory(List<GameHistoryInfo> gameHistory) {
 		this.gameHistory = gameHistory;
 	}
 

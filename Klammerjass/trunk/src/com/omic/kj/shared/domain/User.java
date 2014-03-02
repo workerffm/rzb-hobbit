@@ -6,21 +6,11 @@ public class User
 	private int id;
 	/** reference to Login User object */
 	private String username;      
-	/** user belongs to this team/table, used for routing! */
-	private int teamId;
 
 	public User() {
 		id=0;
-		teamId=0;
 	}
 
-	public int getTeamId() {
-		return teamId;
-	}
-
-	public void setTeamId(int teamId) {
-		this.teamId = teamId;
-	}
 
 	public int getId() {
 		return id;

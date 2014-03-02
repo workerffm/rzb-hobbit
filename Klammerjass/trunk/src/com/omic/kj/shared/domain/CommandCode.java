@@ -2,9 +2,10 @@ package com.omic.kj.shared.domain;
 
 /** Anweisung an Spieler */
 public enum CommandCode {
-	gameinfo,
+	gameReset,
+	gameInfo,
+	gameFinish,
 	playerinfo,
-	//roundinfo,
 	say, 
 	frageOriginal,
 	frageKleines,
@@ -13,6 +14,6 @@ public enum CommandCode {
 	zeigeFuenfzig,
 	zeigeTerz, 
 	tauscheSieben, 
-	spieleKarte,
-	gameFinish;
-}
+	spieleKarte
+};
+

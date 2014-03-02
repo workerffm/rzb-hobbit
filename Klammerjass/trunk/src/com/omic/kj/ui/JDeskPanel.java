@@ -30,6 +30,12 @@ import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.ui.CardArea.Style;
 import com.omic.kj.ui.CardEvent.CardListener;
 
+/**
+ * Klammerjass
+ *
+ * @version 01.03.2014 Markus create file
+ *
+ */
 public class JDeskPanel extends JComponent implements CardListener {
 
 	private final Logger log = Logger.getLogger("UI");
@@ -252,10 +258,13 @@ public class JDeskPanel extends JComponent implements CardListener {
 		u4.paint(g2);
 	}
 
+	/**
+	 * @param deskPlaceId 1..4 player (1=my player), 5=Stich, 6=Stack, 7=Original
+	 * @param cards
+	 */
 	public void setCards(int deskPlaceId, List<CardInfo> cards) {
 		if (deskPlaceId == 1) {
 			p1.clearCards();
-			Collections.sort(cards);
 			p1.addCards(cards);
 		} else if (deskPlaceId == 2) {
 			p2.clearCards();
@@ -286,7 +295,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 	private void setPlayerInfo(List<PlayerInfo> playerInfo) {
 		for (PlayerInfo pi : playerInfo) {
 			if (pi.getPosition() == 1) {
-				u1.setName(pi.getName() + " (" + pi.getPunkte() + "/" + pi.getGesamtpunkte()+")");
+				u1.setName(pi.getName() + " (" + pi.getPunkte() + "/" + pi.getKleinesHolz()+")");
 			} else if (pi.getPosition() == 2) {
 				u2.setName(pi.getName() + " (" + pi.getPunkte() + ")");
 			} else if (pi.getPosition() == 3) {

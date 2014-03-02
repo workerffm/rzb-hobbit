@@ -2,24 +2,25 @@ package com.omic.kj;
 
 import com.omic.kj.shared.domain.*;
 
-
-final class PlayCard
-{
-	/* initialization data: */
-	private final Karte karte;
+final class PlayCard {
 	
-  /* game data: */
-	private int roundNr;        // Runden Nummer
-	private int bidNr;  // Reihenfolge innerhalb vom Stich
-	private Player owner;
-  
-  
-  public PlayCard(Karte c) {
-  	karte = c;
-  }
+	private final Karte karte;
 
-	public void setOwner(Player p) {
-		owner=p;
+	/** Runden Nummer */
+	private int stichNr; 
+	
+	/** Reihenfolge innerhalb vom Stich, 0..playercount-1*/
+	private int bidNr; 
+	
+	/** Karte gehoert ... */
+	private Player owner;
+
+	public PlayCard(Karte karte) {
+		this.karte = karte;
+	}
+
+	public void setOwner(Player player) {
+		this.owner = player;
 	}
 
 	public Player getOwner() {
@@ -30,37 +31,24 @@ final class PlayCard
 	 * @return Karte is assigned to an owner/player and still on the hand, not played.
 	 */
 	public boolean isUnplayed() {
-		return owner!=null && /*!original && */roundNr==0;
+		return owner != null && /*!original && */stichNr == 0;
 	}
 
 	/**
 	 * @return Karte is unassigned and has no owner.
 	 */
 	public boolean isFree() {
-		return owner==null;
+		return owner == null;
 	}
 
-
-	public String toString() {
-		return "["
-		  +roundNr+"|"
-		  +getBidNr()+"|"
-		  +padr((owner!=null?owner.getUsername():null),15)+"|"
-		  +(isFree()?"free":"used")+"|"
-		  //+padr((original?"orig.":""),5)+"|"
-		  //+(original?"trumpf":"")+"|"
-		  +karte.toString()
-		 +"]";
-	}
-
-	private static String padr (String value, int length)	{
-		if(value==null) value="";
-		while (value.length()<length) {
+	private static String padr(String value, int length) {
+		if (value == null)
+			value = "";
+		while (value.length() < length) {
 			value += " ";
 		}
-		return value.substring (0,length);
+		return value.substring(0, length);
 	}
-
 
 	public Farbe getFarbe() {
 		return karte.getFarbe();
@@ -70,28 +58,28 @@ final class PlayCard
 		return karte.getWert();
 	}
 
-	public boolean equals (Farbe c, Kartenwert n) {
-		if(c==null||n==null) return false;
-		return  (c==karte.getFarbe() && n==karte.getWert());
+	public boolean equals(Farbe c, Kartenwert n) {
+		if (c == null || n == null)
+			return false;
+		return (c == karte.getFarbe() && n == karte.getWert());
 	}
 
-	public boolean equals (Karte c) {
-		if(c==null) return false;
-		return  (karte.getFarbe()==c.getFarbe() && karte.getWert()==c.getWert());
+	public boolean equals(Karte c) {
+		if (c == null)
+			return false;
+		return (karte.getFarbe() == c.getFarbe() && karte.getWert() == c.getWert());
 	}
 
 	public Karte getKarte() {
 		return karte;
 	}
 
- 
-
 	/**
 	 * @param Farbe TrumpfFarbe
 	 * @return True, wenn Trumpf Bube?
 	 */
 	public boolean isJass(Farbe f) {
-		return karte.getFarbe()==f && karte.getWert()==Kartenwert.Bube;
+		return karte.getFarbe() == f && karte.getWert() == Kartenwert.Bube;
 	}
 
 	/**
@@ -99,26 +87,26 @@ final class PlayCard
 	 * @return True, wenn Trumpf 9?
 	 */
 	public boolean isMie(Farbe f) {
-		return karte.getFarbe()==f && karte.getWert()==Kartenwert.Neun;
+		return karte.getFarbe() == f && karte.getWert() == Kartenwert.Neun;
 	}
 
 	/**
 	 * Rankfolge der Karte, wird nach Trumpffestlegung neu berechnet!!
 	 */
-	public int getRank (Farbe trumpf) {
-    return karte.getRank() + (trumpf==null ? 0 : (karte.getFarbe() == trumpf ? 100 : 0 ));
+	public int getRank(Farbe trumpf) {
+		return karte.getRank(trumpf);
 	}
 
 	public int getPoints() {
 		return karte.getPunkte();
 	}
 
-	public int getRoundNr() {
-		return roundNr;
+	public int getStichNr() {
+		return stichNr;
 	}
 
-	public void setRoundNr(int roundNr) {
-		this.roundNr = roundNr;
+	public void setStichNr(int stichNr) {
+		this.stichNr = stichNr;
 	}
 
 	public int getBidNr() {
@@ -127,7 +115,12 @@ final class PlayCard
 
 	public void setBidNr(int bidNr) {
 		this.bidNr = bidNr;
-	}	
+	}
 
+	public String toString() {
+		return "[" + stichNr + "|" + getBidNr() + "|" + padr((owner != null ? owner.getUsername() : null), 15) + "|" + (isFree() ? "free" : "used") + "|"
+		//+padr((original?"orig.":""),5)+"|"
+		//+(original?"trumpf":"")+"|"
+				+ karte.toString() + "]";
+	}
 }
-
