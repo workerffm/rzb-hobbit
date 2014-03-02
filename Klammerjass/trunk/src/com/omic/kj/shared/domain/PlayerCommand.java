@@ -35,7 +35,7 @@ public class PlayerCommand {
 	public void setAllowedResponse(ResponseCode[] allowedResponse) {
 		this.allowedResponse = allowedResponse;
 	}
-	public Farbe getErsteKarte() {
+	public Farbe getErsteFarbe() {
 		return ersteKarte;
 	}
 	public void setErsteKarte(Farbe ersteKarte) {

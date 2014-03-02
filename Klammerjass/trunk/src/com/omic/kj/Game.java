@@ -43,7 +43,8 @@ final class Game {
 	private final List<GameHistory> gameHistory;
 	private final AtomicInteger partieNr; // Partiezähler für die History
 	private final AtomicInteger rundenNr; // Rundenzähler für die History
-	private final AtomicInteger spielNr;  // Spielzähler für die History
+	private final AtomicInteger spielNr; // Spielzähler für die History
+	private int maxStichNr;
 	/** Game session data : */
 
 	/** Spiel TX data */
@@ -58,6 +59,7 @@ final class Game {
 	private final List<PlayCard> playcards; // 32 cards with special tags on it
 	private final List<Stich> stiche;
 	private int beet;
+
 	/**  Spiel TX data  */
 
 	public Game() {
@@ -66,7 +68,7 @@ final class Game {
 		this.gameHistory = new ArrayList<>();
 		this.stiche = new ArrayList<>();
 		this.eventQueue = new ArrayBlockingQueue<>(50);
-		this.partieNr = new AtomicInteger(1); 
+		this.partieNr = new AtomicInteger(1);
 		this.rundenNr = new AtomicInteger(1);
 		this.spielNr = new AtomicInteger(1);
 		this.stichNr = new AtomicInteger(1);
@@ -144,7 +146,8 @@ final class Game {
 
 		// FIRST TIME INITIALIZATION
 		//
-		Thread.currentThread().setName("Game "+this.gameId);
+		Thread.currentThread().setName("Game " + this.gameId);
+		this.maxStichNr = 32 / player.size();
 		gotoGameState(GameState.G0);
 
 		// LOOP FOR 4 PLAYER !!
@@ -171,11 +174,11 @@ final class Game {
 				resetSpiel();
 				start = new Date();
 				selectGeber();
-				
+
 				// Reset clients
 				final PlayerCommand pc = new PlayerCommand();
 				sendCommandToAllPlayer(CommandCode.gameReset);
-				
+
 				// Initialize clients
 				sendGameInfo();
 				// 3 Karten für jeden
@@ -234,6 +237,7 @@ final class Game {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Ich gehe rein");
 						gotoGameState(GameState.S0);
 					} else {
 						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
@@ -254,6 +258,7 @@ final class Game {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Ich gehe rein");
 						gotoGameState(GameState.S0);
 					} else {
 						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
@@ -274,6 +279,7 @@ final class Game {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Ich gehe rein");
 						gotoGameState(GameState.S0);
 					} else {
 						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
@@ -294,6 +300,7 @@ final class Game {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = original.getFarbe();
 						originalSelected = true;
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Ich gehe rein");
 						gotoGameState(GameState.S0);
 					} else {
 						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
@@ -364,7 +371,7 @@ final class Game {
 					final PlayerResponse response = event.getPlayerResponse();
 					if (response.getResponseCode() == ResponseCode.nein) {
 						sendPlayerMsg(getPlayerById(response.getPlayerId()), "Noch weg!");
-						gotoGameState(GameState.GOV);
+						gotoGameState(GameState.G20);
 					} else if (response.getResponseCode() == ResponseCode.ja) {
 						Player p = getPlayerLeftFromGeber(+0);
 						sendPlayerCommand(p, CommandCode.frageTrumpffarbe, new ResponseCode[] { ResponseCode.waehleFarbe });
@@ -385,7 +392,7 @@ final class Game {
 					if (response.getResponseCode() == ResponseCode.waehleFarbe) {
 						trumpfPlayer = getPlayerById(response.getPlayerId());
 						trumpfFarbe = response.getFarbe();
-						originalSelected = false;
+						sendPlayerMsg(getPlayerById(response.getPlayerId()), "spiele " + trumpfFarbe);
 						gotoGameState(GameState.S0);
 					} else {
 						throw new Exception("Unexpected response: state=" + gameState + ", response=" + response.getResponseCode());
@@ -396,6 +403,7 @@ final class Game {
 
 			// -----------------------------------------------------------
 			case S0: {
+				originalSelected = true;
 				if (playerCount == 2 || playerCount == 3) {
 					/** Spieler, der die Trumpf 7 hält, kann mit 'Original' tauschen */
 					final PlayCard trumpf7 = getCard(trumpfFarbe, Kartenwert.Sieben);
@@ -480,8 +488,9 @@ final class Game {
 			}
 			// -----------------------------------------------------------
 			case S4: {
-				
-				// Spielende, Gesamtpunkte, Gewinner berechnen.
+
+				// Spielende:
+				// Gesamtpunkte, Gewinner berechnen.
 				createGameHistoryRecord();
 
 				if (this.spielNr.get() == 9) {
@@ -502,13 +511,30 @@ final class Game {
 				}
 				sendPlayerInfo();
 				sendGameInfo(true);
-				
+
 				// Prepare next game:
 				spielNr.incrementAndGet();
-        /** TODO: prüfe neue Runde?
-         * TODO: prüfe Holz, ... 
-         */
-				
+				/** TODO: prüfe neue Runde?
+				 * TODO: prüfe Holz, ... 
+				 */
+
+				// Restart Game:
+				pause(1000);
+				gotoGameState(GameState.G0);
+				break;
+			}
+
+			// -----------------------------------------------------------
+			case G20: {
+				log.info("Alle weg, Karten neu verteilen.");
+				pause(1000);
+				for (Player p : player) {
+					if ((System.currentTimeMillis() % 5) == p.getPosition()) {
+						sendPlayerMsg(p, "Neue Karten");
+					} else if ((System.currentTimeMillis() % 3) == p.getPosition()) {
+						sendPlayerMsg(p, "Mischen");
+					}
+				}
 				// Restart Game:
 				pause(1000);
 				gotoGameState(GameState.G0);
@@ -550,40 +576,27 @@ final class Game {
 	 * Team 2: Spieler 2 + 4 <br>
 	 */
 	private void createGameHistoryRecord() {
-		final GameHistory h = new GameHistory(
-				this.partieNr.get(),
-				this.rundenNr.get(),
-				this.spielNr.get(),
-				this.start, 
-				this.end, 
-				this.geber,
-				this.trumpfPlayer,
-				this.trumpfFarbe,
-				this.beet
-				);
+		final GameHistory h = new GameHistory(this.partieNr.get(), this.rundenNr.get(), this.spielNr.get(), this.start, this.end, this.geber, this.trumpfPlayer, this.trumpfFarbe, this.beet);
 
-		int teamPoints1 = 0, teamPoints2=0;
+		int teamPoints1 = 0, teamPoints2 = 0;
 		for (Player p : player) {
-			if(p.getPosition()==1) {
-				int pts=sumPoints(p);
+			if (p.getPosition() == 1) {
+				int pts = sumPoints(p);
 				h.setPlayerName1(p.getUsername());
 				h.setPlayerPoints1(pts);
 				teamPoints1 += pts;
-			}
-			else if(p.getPosition()==2) {
-				int pts=sumPoints(p);
+			} else if (p.getPosition() == 2) {
+				int pts = sumPoints(p);
 				h.setPlayerName2(p.getUsername());
 				h.setPlayerPoints2(pts);
 				teamPoints2 += pts;
-			}
-			else if(p.getPosition()==3) {
-				int pts=sumPoints(p);
+			} else if (p.getPosition() == 3) {
+				int pts = sumPoints(p);
 				h.setPlayerName3(p.getUsername());
 				h.setPlayerPoints3(pts);
 				teamPoints1 += pts;
-			}
-			else if(p.getPosition()==4) {
-				int pts=sumPoints(p);
+			} else if (p.getPosition() == 4) {
+				int pts = sumPoints(p);
 				h.setPlayerName4(p.getUsername());
 				h.setPlayerPoints4(pts);
 				teamPoints2 += pts;
@@ -592,48 +605,47 @@ final class Game {
 		h.setTeamPoints1(teamPoints1);
 		h.setTeamPoints2(teamPoints2);
 		// Team 1 hat gespielt
-		if(this.trumpfPlayer.getTeamId()==1) {
-			if(teamPoints1>teamPoints2)
-			  h.setTeamGew1(1);
+		if (this.trumpfPlayer.getTeamId() == 1) {
+			if (teamPoints1 > teamPoints2)
+				h.setTeamGew1(1);
 			else
-			  h.setTeamGew2(2);  // TODO: Bei Kontra 4 !!
+				h.setTeamGew2(2); // TODO: Bei Kontra 4 !!
 		}
 		// Team 2 hat gespielt
-		else if(this.trumpfPlayer.getTeamId()==2) {
-			if(teamPoints2>teamPoints1)
-			  h.setTeamGew2(1);
+		else if (this.trumpfPlayer.getTeamId() == 2) {
+			if (teamPoints2 > teamPoints1)
+				h.setTeamGew2(1);
 			else
-			  h.setTeamGew1(2);  // TODO: Bei Kontra 4 !!
+				h.setTeamGew1(2); // TODO: Bei Kontra 4 !!
 		}
 		this.gameHistory.add(h);
 	}
 
-
 	private final StichSorter stichSorter = new StichSorter();
-	
+
 	/**
 		* - Stichgewinner ermitteln
 	  * - Mitspieler im gleichen Team ermitteln
 	  * - Punkte zählen und allen im Team addieren
 	  */
 	private void calculatePointsInRound(final Stich stich) {
-		
+
 		final List<PlayCard> stichcards = new ArrayList<>();
 		for (PlayCard c : playcards) {
 			if (c.getStichNr() == stich.getStichNr()) {
 				stichcards.add(c);
 			}
 		}
-		
+
 		// Nach Spielreihenfolge sortieren
 		Collections.sort(stichcards, this.stichSorter);
-		
+
 		// Erste Karte merken
 		final PlayCard karte1 = stichcards.get(0);
 		PlayCard winnerCard = null;
 		Player winner = null;
 		int points = 0;
-		
+
 		for (PlayCard c : stichcards) {
 			if (winner == null) {
 				winner = karte1.getOwner();
@@ -641,7 +653,7 @@ final class Game {
 			} else {
 				int r1 = winnerCard.getRank(trumpfFarbe);
 				// Abgeworfen, dann rank 0
-				int r2 = c.getFarbe()!=karte1.getFarbe() && c.getFarbe()!=trumpfFarbe ? 0 : c.getRank(trumpfFarbe);
+				int r2 = c.getFarbe() != karte1.getFarbe() && c.getFarbe() != trumpfFarbe ? 0 : c.getRank(trumpfFarbe);
 				if (r2 > r1) {
 					winner = c.getOwner();
 					winnerCard = c;
@@ -657,10 +669,14 @@ final class Game {
 			if (c.isMie(trumpfFarbe)) {
 				points += 14;
 			}
+			// letzter Stich bekommt 10 Extrapunkte
+			if (this.maxStichNr == c.getStichNr()) {
+				points += 10;
+			}
 		}
 		stich.setWinner(winner);
 		stich.setPoints(points);
-		log.info("Round " + stich.getStichNr() + ": " + points + " points for player " + winner.getUsername()+", stich="+stichcards);
+		log.info("Round " + stich.getStichNr() + ": " + points + " points for player " + winner.getUsername() + ", stich=" + stichcards);
 	}
 
 	/**
@@ -711,8 +727,8 @@ final class Game {
 	* Kurzversion: per Zufall. 
 	*/
 	public void selectGeber() {
-		int n=Math.abs((int) System.currentTimeMillis());
-		this.geber = player.get(n%player.size());
+		int n = Math.abs((int) System.currentTimeMillis());
+		this.geber = player.get(n % player.size());
 	}
 
 	/**
@@ -746,7 +762,7 @@ final class Game {
 		gameInfo.setPlayerInfo(playerInfo);
 		gameInfo.setMaxPoints(this.maxSessionPoints);
 		// Send the last history if the game is finished only:
-		if(withGameHistory) {
+		if (withGameHistory) {
 			gameInfo.setGameHistory(buildGameHistory());
 		}
 		final Stich r = getCurrentStich();
@@ -766,7 +782,7 @@ final class Game {
 		sendGameInfo(false);
 	}
 
-	private void sendCommandToAllPlayer(final CommandCode commandCode){
+	private void sendCommandToAllPlayer(final CommandCode commandCode) {
 		for (Player p : player) {
 			final PlayerCommand pc = new PlayerCommand();
 			pc.setCommandCode(commandCode);
@@ -775,7 +791,7 @@ final class Game {
 			this.commandListener.toPlayer(pc);
 		}
 	}
-	
+
 	/**
 	 * Distribute current player info to all other player
 	 */
@@ -833,24 +849,22 @@ final class Game {
 		return info;
 	}
 
-
 	private List<GameHistoryInfo> buildGameHistory() {
 		final List<GameHistoryInfo> info = new ArrayList<>();
-		int points1=0, points2=0, n=0;
-		for (GameHistory h:this.gameHistory) {
-			if(n>this.gameHistory.size()-3) {
+		int points1 = 0, points2 = 0, n = 0;
+		for (GameHistory h : this.gameHistory) {
+			if (n > this.gameHistory.size() - 3) {
 				GameHistoryInfo i;
-				if(h.getTeamGew1()>0) {
-				  info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints1(), "Team 1"));
-				}
-				else if(h.getTeamGew2()>0) {
-				  info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints2(), "Team 2"));
+				if (h.getTeamGew1() > 0) {
+					info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints1(), "Team 1"));
+				} else if (h.getTeamGew2() > 0) {
+					info.add(new GameHistoryInfo(h.getSpielNr(), h.getTeamPoints2(), "Team 2"));
 				}
 			}
 		}
 		return info;
 	}
-	
+
 	private List<CardInfo> buildCardInfo() {
 
 		final List<CardInfo> info = new ArrayList<>();
@@ -945,7 +959,6 @@ final class Game {
 			}
 		}
 	}
-
 
 	public void setGameId(int gameId) {
 		this.gameId = gameId;

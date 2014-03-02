@@ -31,9 +31,9 @@ public class JGamePanel extends JPanel {
 		super();
 		this.cardDesk = new JDeskPanel(4);
 		this.statusPanel = new JStatusPanel();
-		
+
 		this.backgroundImage = getImage("/images/table.jpg");
-		
+
 		final JPanel playerPanel = new JPanel(new BorderLayout());
 		{
 			b1 = new JButton("Belle");
@@ -57,19 +57,23 @@ public class JGamePanel extends JPanel {
 	}
 
 	public void setStatus(PlayerInfo pi) {
-		statusPanel.setText(0,"Geber: "+pi.getGeber());
-		statusPanel.setText(1,"Aufspieler: "+pi.getAufspieler());
-		statusPanel.setText(2,pi.getTrumpf()!= null ? getTrumpfChar(pi.getTrumpf())+" "+pi.getTrumpf().name()+" ist Trumpf" : "");
-		statusPanel.setText(3,pi.getRunde()>0 ? pi.getRunde() + ". Runde":"");
+		statusPanel.setText(0, "Geber: " + pi.getGeber());
+		statusPanel.setText(1, "Aufspieler: " + pi.getAufspieler());
+		statusPanel.setText(2, pi.getTrumpf() != null ? getTrumpfChar(pi.getTrumpf()) + " " + pi.getTrumpf().name() + " ist Trumpf" : "");
+		statusPanel.setText(3, pi.getRunde() > 0 ? pi.getRunde() + ". Runde" : "");
 		//cardDesk.setActivePosition (pi);
 	}
 
 	private String getTrumpfChar(Farbe t) {
 		switch (t) {
-		case Karo: return "\u2666";		
-		case Herz: return "\u2665";		
-		case Pik: return "\u2660";		
-		case Kreuz: return "\u2663";		
+		case Karo:
+			return "\u2666";
+		case Herz:
+			return "\u2665";
+		case Pik:
+			return "\u2660";
+		case Kreuz:
+			return "\u2663";
 		}
 		return "";
 	}
@@ -83,7 +87,7 @@ public class JGamePanel extends JPanel {
 	}
 
 	public Future<Karte> askForCard() {
-    return cardDesk.askForCard();		
+		return cardDesk.askForCard();
 	}
 
 	public void showGameInfo(GameInfo gameInfo) {
@@ -91,10 +95,31 @@ public class JGamePanel extends JPanel {
 	}
 
 	public ResponseCode askUser(String message, ResponseCode[] allowedResponse) {
-    int n = JOptionPane.showOptionDialog(this, message, "Frage", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, allowedResponse, null); 
-    if (n<0) return null;
-    ResponseCode r = allowedResponse[n];
+		int n = JOptionPane.showOptionDialog(this, message, "Frage", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, allowedResponse, null);
+		if (n < 0)
+			return null;
+		ResponseCode r = allowedResponse[n];
 		return r;
+	}
+
+	public Farbe askUserFarbe(String message, Farbe ersteFarbe) {
+		final Farbe[] farben;
+		if (ersteFarbe == null)
+			farben = Farbe.values();
+		else {
+			// Farbe der ersten Karte / ersten Frage nicht mehr anzeigen.
+			farben = new Farbe[Farbe.values().length - 1];
+			int n = 0;
+			for (Farbe f : Farbe.values()) {
+				if (f != ersteFarbe) {
+					farben[n++] = f;
+				}
+			}
+		}
+		int n = JOptionPane.showOptionDialog(this, message, "Frage", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, farben, null);
+		if (n < 0)
+			return null;
+		return farben[n];
 	}
 
 	public void showBubble(int playerPosition, String message) {
@@ -106,7 +131,7 @@ public class JGamePanel extends JPanel {
 		g.drawImage(backgroundImage, 0, 0, null);
 		super.paint(g);
 	}
-	
+
 	private Image getImage(String filename) {
 		try {
 			InputStream is = this.getClass().getResourceAsStream(filename);
@@ -118,4 +143,5 @@ public class JGamePanel extends JPanel {
 		}
 		return null;
 	}
+
 }
