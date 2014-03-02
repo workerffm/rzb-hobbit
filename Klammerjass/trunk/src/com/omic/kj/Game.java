@@ -871,8 +871,7 @@ final class Game {
 		final Map<Integer, CardInfo> roundCards = new HashMap<>();
 
 		for (final PlayCard card : playcards) {
-			final CardInfo ci = new CardInfo();
-			ci.setKarte(card.getKarte());
+			final CardInfo ci = new CardInfo(card.getKarte());
 			ci.setOffen(card.getOwner() != null && !card.getOwner().isComputer());
 			ci.setPlayerPosition(card.getOwner() != null ? card.getOwner().getPosition() : 0);
 
@@ -922,8 +921,7 @@ final class Game {
 		final Set<CardInfo> playercards = new HashSet<>();
 		for (PlayCard pc : playcards) {
 			if (pc.getOwner() != null && pc.getOwner().getId() == p.getId()) {
-				CardInfo hc = new CardInfo();
-				hc.setKarte(pc.getKarte());
+				CardInfo hc = new CardInfo(pc.getKarte());
 				hc.setOffen(!p.isComputer());
 				playercards.add(hc);
 			}
