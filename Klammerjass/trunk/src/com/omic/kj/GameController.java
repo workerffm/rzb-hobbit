@@ -187,7 +187,7 @@ public class GameController implements ServerInterface, PlayerResponseListener, 
 							//
 							command.setPlayerCommandId(playerCommandId);
 							playerCommandId++;
-							//log.info("CMD "+command+" --> "+listener);
+							log.info(command+" --> "+listener);
 							listener.toPlayer(command);
 						}
 					}

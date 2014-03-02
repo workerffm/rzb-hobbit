@@ -13,6 +13,7 @@ import com.omic.kj.local.LocalGameConnector;
 import com.omic.kj.shared.PlayerCommandListener;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.CardPlace;
+import com.omic.kj.shared.domain.Farbe;
 import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.GameSettings;
 import com.omic.kj.shared.domain.Karte;
@@ -34,6 +35,7 @@ class LocalPlayer implements PlayerCommandListener {
 	private int maxPlayer;
 	private final Map<Integer, List<CardInfo>> cardsPerPlace;
 	private Comparator<CardInfo> cardSorter;
+	private Farbe ersteFarbe;
 
 
 	LocalPlayer() {
@@ -66,6 +68,7 @@ class LocalPlayer implements PlayerCommandListener {
 				switch (command.getCommandCode()) {
 				case gameReset: {
 					cardSorter = null;
+					ersteFarbe = null;
 					break;
 				}
 				case gameInfo: {
@@ -80,13 +83,52 @@ class LocalPlayer implements PlayerCommandListener {
 				case frageOriginal: {
 					final PlayerInfo info = command.getInfo();
 					showPlayerInfo(info);
-					ResponseCode responseCode = gamedesk.askUser(command.getErsteKarte() + " spielen?", command.getAllowedResponse());
+					this.ersteFarbe = command.getErsteFarbe();
+					ResponseCode responseCode = gamedesk.askUser(command.getErsteFarbe() + " spielen?", command.getAllowedResponse());
 					PlayerResponse response = new PlayerResponse();
 					response.setPlayerId(info.getPlayerId());
-					response.setResponseCode(responseCode);
+					response.setResponseCode(responseCode==null ? ResponseCode.nein : responseCode);
 					connector.playerResponse(response);
 					break;
 				}
+				
+				case frageKleines:{
+					final PlayerInfo info = command.getInfo();
+					showPlayerInfo(info);
+					ResponseCode responseCode = gamedesk.askUser("Kleines spielen?", command.getAllowedResponse());
+					PlayerResponse response = new PlayerResponse();
+					response.setPlayerId(info.getPlayerId());
+					response.setResponseCode(responseCode==null ? ResponseCode.nein : responseCode);
+					connector.playerResponse(response);
+					break;
+				}
+
+				case frageTrumpffarbe:{
+					final PlayerInfo info = command.getInfo();
+					showPlayerInfo(info);
+					Farbe f=null;
+					while(f==null) {
+				    f = gamedesk.askUserFarbe("Heiﬂt?",this.ersteFarbe);
+					}
+					PlayerResponse response = new PlayerResponse();
+					response.setPlayerId(info.getPlayerId());
+					response.setResponseCode(ResponseCode.waehleFarbe);
+					response.setFarbe(f);
+					connector.playerResponse(response);
+					break;
+				}
+				
+				case frageBesser:{
+					final PlayerInfo info = command.getInfo();
+					showPlayerInfo(info);
+					ResponseCode responseCode = gamedesk.askUser("Besser?", command.getAllowedResponse());
+					PlayerResponse response = new PlayerResponse();
+					response.setPlayerId(info.getPlayerId());
+					response.setResponseCode(responseCode==null ? ResponseCode.nein : responseCode);
+					connector.playerResponse(response);
+					break;
+				}
+					
 				case spieleKarte: {
 					final PlayerInfo info = command.getInfo();
 					showPlayerInfo(info);
@@ -110,12 +152,7 @@ class LocalPlayer implements PlayerCommandListener {
 					connector.playerResponse(response);
 					break;
 				}
-				case frageBesser:
-					break;
-				case frageKleines:
-					break;
-				case frageTrumpffarbe:
-					break;
+			
 //				case gameFinish: {
 //					GameInfo info = command.getGameInfo();
 //					showGameInfo(info);

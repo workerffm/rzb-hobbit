@@ -6,7 +6,7 @@ final class PlayCard {
 	
 	private final Karte karte;
 
-	/** Runden Nummer */
+	/** Runden Nummer 1 .. (32 div PlayerCount) */
 	private int stichNr; 
 	
 	/** Reihenfolge innerhalb vom Stich, 0..playercount-1*/

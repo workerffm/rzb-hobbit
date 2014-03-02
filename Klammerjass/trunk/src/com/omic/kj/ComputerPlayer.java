@@ -21,10 +21,9 @@ import com.omic.kj.shared.game.PlayRules;
 public class ComputerPlayer implements CommandListener {
 
 	private final Logger log = Logger.getLogger("ComputerPlayer");
-	
-	private final Player me;
-	private PlayerResponseListener listener;
 
+	private PlayerResponseListener listener;
+	private final Player me;
 
 	public ComputerPlayer(Player player) {
 		this.me = player;
@@ -59,6 +58,16 @@ public class ComputerPlayer implements CommandListener {
 				listener.onMessage(response);
 				break;
 			}
+
+			case frageKleines: {
+				final PlayerInfo info = command.getInfo();
+				PlayerResponse response = new PlayerResponse();
+				response.setPlayerId(info.getPlayerId());
+				response.setResponseCode(ResponseCode.nein);
+				listener.onMessage(response);
+				break;
+			}
+
 			case spieleKarte: {
 				final PlayerInfo info = command.getInfo();
 				Karte selectedCard = null;
@@ -88,7 +97,36 @@ public class ComputerPlayer implements CommandListener {
 				listener.onMessage(response);
 				break;
 			}
-
+			case frageBesser: {
+				final PlayerInfo info = command.getInfo();
+				PlayerResponse response = new PlayerResponse();
+				response.setPlayerId(info.getPlayerId());
+				response.setResponseCode(ResponseCode.nein);
+				listener.onMessage(response);
+				break;
+			}
+			case frageTrumpffarbe:
+				break;
+			case gameFinish:
+				break;
+			case gameInfo:
+				break;
+			case gameReset:
+				break;
+			case say:
+				break;
+			case tauscheSieben: {
+				final PlayerInfo info = command.getInfo();
+				PlayerResponse response = new PlayerResponse();
+				response.setPlayerId(info.getPlayerId());
+				response.setResponseCode(ResponseCode.nein);
+				listener.onMessage(response);
+				break;
+			}
+			case zeigeFuenfzig:
+				break;
+			case zeigeTerz:
+				break;
 			}
 		}
 	}
