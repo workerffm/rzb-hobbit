@@ -22,9 +22,11 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.Karte;
-import com.omic.kj.ui.CardEvent.CardListener;
-import com.omic.kj.ui.CardEvent.ChangeType;
+import com.omic.kj.ui.component.CardEvent;
+import com.omic.kj.ui.component.CardEvent.CardListener;
+import com.omic.kj.ui.component.CardEvent.ChangeType;
 
+@Deprecated
 public final class CardArea {
 
 	private final Logger log = Logger.getLogger("UI");

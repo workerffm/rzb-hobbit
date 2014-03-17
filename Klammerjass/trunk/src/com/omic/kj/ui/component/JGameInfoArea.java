@@ -1,4 +1,4 @@
-package com.omic.kj.ui;
+package com.omic.kj.ui.component;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import com.omic.kj.shared.domain.GameHistoryInfo;
+import com.omic.kj.shared.domain.GameInfo;
 
 /**
  * Show game history, the last 3 entries
@@ -24,7 +25,7 @@ public class JGameInfoArea extends JComponent {
 			
 	private final List<GameHistoryInfo> gameHistory;
 	private String activeGame;
-	private int maxPoints;
+	private GameInfo gameInfo;
 
 	public JGameInfoArea() {
 		this.gameHistory = new ArrayList<>();
@@ -46,9 +47,9 @@ public class JGameInfoArea extends JComponent {
 	}
 
 	
-	public void setActiveGameInfo (String activeGame, int maxPoints) {
+	public void setActiveGameInfo (String activeGame, GameInfo gameInfo) {
 		this.activeGame = activeGame;
-		this.maxPoints = maxPoints;
+		this.gameInfo = gameInfo;
 	}
 
 	@Override
@@ -80,7 +81,7 @@ public class JGameInfoArea extends JComponent {
 		g.setColor(Color.white);
 		g.setFont(smallFont);
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
-		g.drawString(activeGame+" - bis "+maxPoints+" Punkte", x + 4, y + 16);
+		g.drawString(activeGame+" - bis "+gameInfo.getMaxRunden()+" Runden", x + 4, y + 16);
 		y -= 28;
 		
 		int showMax = 3;

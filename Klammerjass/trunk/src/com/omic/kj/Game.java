@@ -35,6 +35,10 @@ final class Game {
 	private final ArrayBlockingQueue<GameEvent> eventQueue;
 
 	/** Game session data : */
+	private final int MAX_PLAYER = 4;
+	private final int MAX_RUNDEN = 9;
+	private final int MAX_PARTIEN = 2;
+	
 	private int gameId; // identifier for compare method
 	private int maxSessionPoints; // Spielende bei diesen Punkten
 	private GameState gameState; // aktuelle Phase
@@ -99,7 +103,7 @@ final class Game {
 
 	public void joinGame(final Player p, final GameSettings gs) throws Exception {
 		final int playerCount = player.size();
-		if (playerCount < 4) {
+		if (playerCount < MAX_PLAYER) {
 			player.add(p);
 			if (gs != null) {
 				setLimit(gs.getMaximumPoints());
@@ -136,10 +140,10 @@ final class Game {
 			if (playerCount < 2) {
 				throw new Exception("Zu wenig Spieler für ein Spiel.");
 			}
-			if (playerCount > 4) {
+			if (playerCount > MAX_PLAYER) {
 				throw new Exception("Zu viele Spieler für ein Spiel.");
 			}
-			if (playerCount < 2 || playerCount > 4) {
+			if (playerCount < 2 || playerCount > MAX_PLAYER) {
 				throw new Exception("Unpassende Spieleranzahl.");
 			}
 		}
@@ -493,7 +497,7 @@ final class Game {
 				// Gesamtpunkte, Gewinner berechnen.
 				createGameHistoryRecord();
 
-				if (this.spielNr.get() == 9) {
+				if (this.spielNr.get() == MAX_RUNDEN) {
 					sendGameInfo();
 					gotoGameState(GameState.GOV);
 				} else {
@@ -761,6 +765,7 @@ final class Game {
 		final GameInfo gameInfo = new GameInfo();
 		gameInfo.setPlayerInfo(playerInfo);
 		gameInfo.setMaxPoints(this.maxSessionPoints);
+		gameInfo.setMaxRunden(MAX_RUNDEN);
 		// Send the last history if the game is finished only:
 		if (withGameHistory) {
 			gameInfo.setGameHistory(buildGameHistory());

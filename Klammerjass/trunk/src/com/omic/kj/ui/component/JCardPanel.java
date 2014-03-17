@@ -1,7 +1,5 @@
-package com.omic.kj.ui;
+package com.omic.kj.ui.component;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -13,6 +11,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,19 +20,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Logger;
-import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.Karte;
-import com.omic.kj.ui.component.CardEvent;
+import com.omic.kj.ui.CardImageCache;
 import com.omic.kj.ui.component.CardEvent.CardListener;
 import com.omic.kj.ui.component.CardEvent.ChangeType;
 
-@Deprecated
-public final class JCardArea extends JComponent {
-
-	private final Logger log = Logger.getLogger("UI");
+public class JCardPanel extends JPanel {
 
 	public enum Style {
 		/** Alle Karten übereinander */
@@ -43,7 +39,6 @@ public final class JCardArea extends JComponent {
 		ROW
 	};
 
-	//private final int BORDER =80;
 	private final int EXPOSE_OFFSET = 21;
 	private final int CROSS_OFFSET = 45;
 	private final double DEFAULT_OVERLAPP = .45d; // x% overlapp to next card
@@ -53,6 +48,7 @@ public final class JCardArea extends JComponent {
 	private Style style;
 	private Karte selectedCard;
 	private Point offset;
+	private int rotationQuadrant;
 
 	private final List<CardInfo> cards;
 	private final Dimension cardDimension;
@@ -60,10 +56,11 @@ public final class JCardArea extends JComponent {
 	private final Set<CardListener> listeners;
 	private double crossRotation;
 	private double overlapp;
-	private double rotationInRadians;
 
-	public JCardArea() {
+	public JCardPanel() {
 		super();
+		hidden = false;
+		exposeSelectedCard = false;
 		cards = new ArrayList<>();
 		listeners = new HashSet<>();
 		cardAreas = new ArrayList<>();
@@ -73,10 +70,8 @@ public final class JCardArea extends JComponent {
 	}
 
 	@Override
-	public void paint(Graphics g) {
-		super.paint(g);
-		g.setColor(Color.white);
-		g.fillRect(0, 0, getBounds().width, getBounds().height);
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		paint2((Graphics2D) g);
 	}
 
@@ -84,48 +79,88 @@ public final class JCardArea extends JComponent {
 		if (cards.size() > 0) {
 
 			final AffineTransform saveAT = g.getTransform();
-			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-			///final int x = getLocation().x, y = getLocation().y;
-			final int x = 0, y = 0;
+			final int x = getLocation().x, y = getLocation().y;
 
 			if (getStyle() == Style.ROW) {
 
-				final int step = (int) Math.round((1d - this.getOverlapp()) * cardDimension.width);
-				final Dimension d = new Dimension((step - 1) * cards.size() + cardDimension.width, cardDimension.height + EXPOSE_OFFSET);
-				setSize(Math.max(d.width,d.height), Math.max(d.width,d.height));
-				if (this.rotationInRadians != 0d) {
-					g.rotate(this.rotationInRadians,0,0);
-					g.translate(0, -d.height / 1);
-				  //g.translate(0, d.height/2);
-				}
-
-				int imgx = x;//- (step * cards.size()) / 2 + (offset != null ? offset.x : 0);
-
 				cardAreas.clear();
+
+				int imgx = 0;
+				int imgy = 0;
+				final int stepx, stepy;
+				final Dimension d;
+
+				if (rotationQuadrant == 0) {
+					stepx = (int) Math.round((1d - this.getOverlapp()) * cardDimension.width);
+					stepy = 0;
+					d = new Dimension(stepx * (cards.size() - 1) + cardDimension.width, cardDimension.height + EXPOSE_OFFSET);
+				} else if (rotationQuadrant == 1) {
+					stepx = 0;
+					stepy = (int) Math.round((1d - this.getOverlapp()) * cardDimension.width);
+					d = new Dimension(cardDimension.height + EXPOSE_OFFSET, stepy * (cards.size() - 1) + cardDimension.width);
+				} else if (rotationQuadrant == 2) {
+					stepx = -(int) Math.round((this.getOverlapp()) * cardDimension.width);
+					stepy = 0;
+					d = new Dimension(-stepx * (cards.size() - 1) + cardDimension.width, cardDimension.height + EXPOSE_OFFSET);
+					imgx = d.width - cardDimension.width;
+				} else if (rotationQuadrant == 3) {
+					stepx = 0;
+					stepy = -(int) Math.round((1d - this.getOverlapp()) * cardDimension.width);
+					d = new Dimension(cardDimension.height /*+ EXPOSE_OFFSET*/, -stepy * (cards.size() - 1) + cardDimension.width);
+					imgy = d.height - cardDimension.width;
+				} else {
+					System.err.println("Invalid rotation");
+					stepx = stepy = 0;
+					d = null;
+				}
+				setPreferredSize(d);
+				setBounds(x, y, x + d.width, y + d.height);
+				System.out.println("rot=" + getRotationQuadrant() + ", x=" + x + ", y=" + y + ", d.w=" + d.width + ", d.h=" + d.height + ", stepx=" + stepx + ", stepy=" + stepy);
+
 				for (int n = 0; n < cards.size(); n++) {
 					final CardInfo ci = cards.get(n);
 					final Karte card = ci.getKarte();
-					final Image img;
+					final BufferedImage img;
 					if (hidden) {
 						img = CardImageCache.getCoverImage();
 					} else {
 						img = CardImageCache.getImage(card);
 					}
-					final int selectOffset = (isExposeSelectedCard() && (card == this.selectedCard)) ? 0 : EXPOSE_OFFSET;
-					//final int imgy = y - cardDimension.height - selectOffset + (offset != null ? offset.y : 0);
-					final int imgy = y + selectOffset + (offset != null ? offset.y : 0);
-					g.drawImage(img, imgx, imgy, null);
+					final int selectOffset = rotationQuadrant == 0 && (isExposeSelectedCard() && (card == this.selectedCard)) ? 0 : EXPOSE_OFFSET;
 
-					// Track area for mouse over events:
-					final Rectangle r = new Rectangle(new Point(imgx, imgy), cardDimension);
-					cardAreas.add(0, new AbstractMap.SimpleImmutableEntry<>(r, card));
-					//log.info("selected card: "+selectedCard);
-					imgx += step;
+					final AffineTransformOp opRotated;
+					{
+						final AffineTransform affineTransform = AffineTransform.getQuadrantRotateInstance(rotationQuadrant, cardDimension.width / 2, cardDimension.height / 2);
+						int corr = 0;
+						if (rotationQuadrant == 0) {
+							corr = 0;
+						} else if (rotationQuadrant == 1) {
+							corr = Math.abs(cardDimension.height - cardDimension.width) / 2;
+							affineTransform.translate(-corr, -corr);
+						} else if (rotationQuadrant == 2) {
+							corr = 0;
+							affineTransform.translate(-corr, -corr);
+						} else if (rotationQuadrant == 3) {
+							corr = -Math.abs(cardDimension.height - cardDimension.width) / 2;
+							affineTransform.translate(-corr - 1, -corr);
+						}
+						opRotated = new AffineTransformOp(affineTransform, AffineTransformOp.TYPE_BILINEAR);
+					}
+					BufferedImage newImage = opRotated.filter(img, null);
+					g.drawImage(newImage, imgx, imgy + selectOffset, null);
+
+					//System.out.println("corr=" + corr + ", rot=" + getRotationQuadrant() + ", x=" + x + ", y=" + y + ", d.w=" + d.width + ", d.h=" + d.height + ", stepx=" + stepx + ", stepy=" + stepy);
+
+					// Save area for mouse over events:
+					if (rotationQuadrant == 0) {
+						final Rectangle r = new Rectangle(new Point(imgx, imgy), cardDimension);
+						cardAreas.add(0, new AbstractMap.SimpleImmutableEntry<>(r, card));
+					}
+					// Prepare next card
+					imgx += stepx;
+					imgy += stepy;
 				}
 				g.setTransform(saveAT);
-				g.setColor(Color.blue);
-				g.fillOval(d.width / 2, d.height / 2,33,33);
-				g.setColor(Color.red);
 			} // ROW
 
 			else if (getStyle() == Style.STACK) {
@@ -190,7 +225,7 @@ public final class JCardArea extends JComponent {
 
 	public void clearCards() {
 		this.cards.clear();
-		this.crossRotation = Math.toRadians(50); // + (5 - Math.random() * 10));
+		this.crossRotation = Math.toRadians(50);
 	}
 
 	public void addCard(CardInfo k) {
@@ -230,11 +265,19 @@ public final class JCardArea extends JComponent {
 	}
 
 	public void setOverlapp(double overlapp) {
+		if (overlapp < 0d || overlapp > 1d)
+			throw new IllegalArgumentException("overlapp");
 		this.overlapp = overlapp;
 	}
 
-	public void setRotation(double rotationInRadians) {
-		this.rotationInRadians = rotationInRadians;
+	public int getRotationQuadrant() {
+		return rotationQuadrant;
+	}
+
+	public void setRotationQuadrant(int rotationQuadrant) {
+		if (rotationQuadrant < 0 || rotationQuadrant > 3)
+			throw new IllegalArgumentException("rotationQuadrant");
+		this.rotationQuadrant = rotationQuadrant;
 	}
 
 	// -- Listener & Event stuff --------------------------------------------------------------------
@@ -246,12 +289,10 @@ public final class JCardArea extends JComponent {
 		owner.addMouseMotionListener(new MouseMotionListener() {
 			@Override
 			public void mouseMoved(MouseEvent e) {
-				if (JCardArea.this.rotationInRadians == 0d) {
-					Karte nowSelectedCard = getSelectedCard(e.getPoint());
-					if (nowSelectedCard != selectedCard) {
-						selectedCard = nowSelectedCard;
-						sendEvent(new CardEvent(selectedCard, ChangeType.CARD_SELECTED));
-					}
+				Karte nowSelectedCard = getSelectedCard(e.getPoint());
+				if (nowSelectedCard != selectedCard) {
+					selectedCard = nowSelectedCard;
+					sendEvent(new CardEvent(selectedCard, ChangeType.CARD_SELECTED));
 				}
 			}
 
@@ -267,14 +308,17 @@ public final class JCardArea extends JComponent {
 			public void mousePressed(MouseEvent e) {}
 
 			@Override
-			public void mouseExited(MouseEvent e) {}
+			public void mouseExited(MouseEvent e) {
+				selectedCard = null;
+				sendEvent(new CardEvent(selectedCard, ChangeType.CARD_SELECTED));
+			}
 
 			@Override
 			public void mouseEntered(MouseEvent e) {}
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (JCardArea.this.rotationInRadians == 0d) {
+				if (JCardPanel.this.getRotationQuadrant() == 0) {
 					Karte nowSelectedCard = getSelectedCard(e.getPoint());
 					selectedCard = null;
 					if (nowSelectedCard != null) {

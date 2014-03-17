@@ -17,8 +17,8 @@ public class CardImageCache {
 	private final Logger log = Logger.getLogger("UI");
 	
 	private static CardImageCache instance;
-	private final Map<Karte, Image> cache = new HashMap<>();
-	private Image defaultImage, coverImage;
+	private final Map<Karte, BufferedImage> cache = new HashMap<>();
+	private BufferedImage defaultImage, coverImage;
 	private Dimension cardDimension;
 
 	private CardImageCache() {
@@ -259,11 +259,11 @@ public class CardImageCache {
 		}
 	}
 
-	public static Image getImage(final Karte k) {
+	public static BufferedImage getImage(final Karte k) {
 		return getInstance().getImage2(k);
 	}
 
-	public static Image getCoverImage() {
+	public static BufferedImage getCoverImage() {
 		return getInstance().coverImage;
 	}
 
@@ -278,8 +278,8 @@ public class CardImageCache {
 		return instance;
 	}
 
-	private Image getImage2(final Karte k) {
-		Image img = cache.get(k);
+	private BufferedImage getImage2(final Karte k) {
+		BufferedImage img = cache.get(k);
 		return img == null ? defaultImage : img;
 	}
 

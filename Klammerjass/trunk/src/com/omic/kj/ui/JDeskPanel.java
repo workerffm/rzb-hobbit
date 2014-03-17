@@ -28,7 +28,9 @@ import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.Karte;
 import com.omic.kj.shared.domain.PlayerInfo;
 import com.omic.kj.ui.CardArea.Style;
-import com.omic.kj.ui.CardEvent.CardListener;
+import com.omic.kj.ui.component.CardEvent;
+import com.omic.kj.ui.component.JGameInfoArea;
+import com.omic.kj.ui.component.CardEvent.CardListener;
 
 /**
  * Klammerjass
@@ -328,7 +330,6 @@ public class JDeskPanel extends JComponent implements CardListener {
 	}
 
 	private final class BubbleThread extends Thread {
-
 		private PlayerArea playerArea;
 		private String message;
 
@@ -349,9 +350,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 			this.playerArea.setBubbleMessage(null);
 			repaint();
 		}
-
 	}
-
 
 	public void showGameInfo(final GameInfo gameInfo) {
 		setPlayerInfo (gameInfo.getPlayerInfo());
@@ -359,7 +358,7 @@ public class JDeskPanel extends JComponent implements CardListener {
 		if(gameInfo.getGameHistory()!=null) {
 			gameInfoArea.add(gameInfo.getGameHistory());
 		}
-		gameInfoArea.setActiveGameInfo("Spiel läuft", gameInfo.getMaxPoints());
+		gameInfoArea.setActiveGameInfo("Spiel läuft", gameInfo);
 	}
 
 }

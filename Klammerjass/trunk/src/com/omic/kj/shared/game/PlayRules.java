@@ -23,7 +23,7 @@ public class PlayRules {
 			}
 			// Hat Spieler noch die Farbe?
 			if (hatNochFarbe(hardCards, karte1)) {
-				if (selectedCard.getFarbe()==trumpf) {
+				if (selectedCard.getFarbe()==karte1.getFarbe()) {
 					return true;
 				}
 			  return false;

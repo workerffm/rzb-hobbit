@@ -26,13 +26,14 @@ package com.omic.kj.shared.domain;
 public class GameSettings {
 
 	private boolean option_playWithPc;
-	private int anzPCs, max_points;
+	private int anzPCs, maxPoints, maxRounds;
 	
 	
 	public GameSettings (boolean playWithPC, int anzPCGegner, int maxPoints) {
 		option_playWithPc = playWithPC;
 		anzPCs = anzPCGegner;
-		max_points = maxPoints;
+		this.maxPoints = maxPoints;
+		this.maxRounds = 9;
 	}
 
 
@@ -51,7 +52,7 @@ public class GameSettings {
 	}
 
 	public int getMaximumPoints() {
-		return max_points;
+		return maxPoints;
 	}
 
 	public void setOption_WITHPC (boolean b) {
@@ -62,7 +63,7 @@ public class GameSettings {
 		return "["
 		  +"option_playWithPc="+option_playWithPc+","
 		  +"anzPCs="+anzPCs+","
-		  +"max_points="+max_points
+		  +"max_points="+maxPoints
 		 +"]";
 	}
 
