@@ -3,12 +3,13 @@ package com.omic.kj.test;
 import javax.swing.JFrame;
 import com.omic.kj.shared.domain.CardInfo;
 import com.omic.kj.shared.domain.GameHistoryInfo;
+import com.omic.kj.shared.domain.GameInfo;
 import com.omic.kj.shared.domain.Karte;
-import com.omic.kj.ui.CardEvent;
-import com.omic.kj.ui.CardEvent.CardListener;
 import com.omic.kj.ui.JCardArea;
 import com.omic.kj.ui.JCardArea.Style;
-import com.omic.kj.ui.JGameInfoArea;
+import com.omic.kj.ui.component.CardEvent;
+import com.omic.kj.ui.component.JGameInfoArea;
+import com.omic.kj.ui.component.CardEvent.CardListener;
 
 class TestFrame extends JFrame {
 
@@ -27,7 +28,9 @@ class TestFrame extends JFrame {
 		JGameInfoArea a = new JGameInfoArea();
 		a.add(new GameHistoryInfo(1,255,"Tom"));
 		a.add(new GameHistoryInfo(2,13,"Markus"));
-		a.setActiveGameInfo ("Spiel läuft", 600);
+		GameInfo gameInfo = new GameInfo();
+		gameInfo.setMaxRunden(9);
+		a.setActiveGameInfo ("Spiel läuft", gameInfo);
 		a.setLocation(5, 5);
 		
 		

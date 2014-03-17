@@ -1,4 +1,4 @@
-package com.omic.kj.ui;
+package com.omic.kj.ui.component;
 
 import com.omic.kj.shared.domain.Karte;
 

@@ -10,6 +10,7 @@ public class GameInfo {
 	private List<PlayerInfo> playerInfo;
 	private List<GameHistoryInfo> gameHistory;
 	private int maxPoints;
+	private int maxRunden;
 
 	public List<GameHistoryInfo> getGameHistory() {
 		return gameHistory;
@@ -41,6 +42,14 @@ public class GameInfo {
 
 	public void setMaxPoints(int maxPoints) {
 		this.maxPoints = maxPoints;
+	}
+
+	public int getMaxRunden() {
+		return maxRunden;
+	}
+
+	public void setMaxRunden(int maxRunden) {
+		this.maxRunden = maxRunden;
 	}
 
 }

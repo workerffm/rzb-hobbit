@@ -32,7 +32,7 @@ public class JGamePanel extends JPanel {
 		this.cardDesk = new JDeskPanel(4);
 		this.statusPanel = new JStatusPanel();
 
-		this.backgroundImage = getImage("/images/table.jpg");
+		this.backgroundImage = getImage("/images/table3.jpg");
 
 		final JPanel playerPanel = new JPanel(new BorderLayout());
 		{
