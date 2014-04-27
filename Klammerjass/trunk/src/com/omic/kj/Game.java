@@ -946,7 +946,8 @@ final class Game {
 
 	private void assignFreeCardToPlayer(final Player p, boolean assignOriginal) {
 		for (;;) {
-			long skip = Math.round(Math.random() * 61), s = 0;
+			long skip = Math.round(Math.random() * (System.nanoTime() & 255));
+			long s = 0;
 			for (final PlayCard c : playcards) {
 				if (s++ >= skip) {
 					if (c.isFree()) {

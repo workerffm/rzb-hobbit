@@ -59,6 +59,7 @@ public class JCardPanel extends JPanel {
 
 	public JCardPanel() {
 		super();
+		setOpaque(false);
 		hidden = false;
 		exposeSelectedCard = false;
 		cards = new ArrayList<>();
@@ -115,7 +116,7 @@ public class JCardPanel extends JPanel {
 				}
 				setPreferredSize(d);
 				setBounds(x, y, x + d.width, y + d.height);
-				System.out.println("rot=" + getRotationQuadrant() + ", x=" + x + ", y=" + y + ", d.w=" + d.width + ", d.h=" + d.height + ", stepx=" + stepx + ", stepy=" + stepy);
+				//System.out.println("rot=" + getRotationQuadrant() + ", x=" + x + ", y=" + y + ", d.w=" + d.width + ", d.h=" + d.height + ", stepx=" + stepx + ", stepy=" + stepy);
 
 				for (int n = 0; n < cards.size(); n++) {
 					final CardInfo ci = cards.get(n);
@@ -164,9 +165,13 @@ public class JCardPanel extends JPanel {
 			} // ROW
 
 			else if (getStyle() == Style.STACK) {
-
-				int imgx = x - cardDimension.width / 2;
-				int imgy = y - cardDimension.height / 2;
+				//setBounds(x, y, x + d.width, y + d.height);
+				Dimension d = new Dimension(200,200);
+				setPreferredSize(d);
+				//setBounds(x, y, x + d.width, y + d.height);
+				
+				int imgx =  cardDimension.width / 2;
+				int imgy =  cardDimension.height / 2;
 				for (int n = 0; n < cards.size(); n++) {
 					final CardInfo ci = cards.get(n);
 					final Karte card = ci.getKarte();
@@ -182,20 +187,43 @@ public class JCardPanel extends JPanel {
 
 			else if (getStyle() == Style.CROSS) {
 
-				int imgx = x - cardDimension.width / 2;
-				int imgy = y - cardDimension.height / 2;
-				for (int n = 0; n < cards.size(); n++) {
+				setPreferredSize( new Dimension(400,400));
+				int rot = 20;
+				for (int n = 0; n < cards.size(); n++,rot+=75) {
 					final CardInfo ci = cards.get(n);
 					final Karte card = ci.getKarte();
-					final Image img;
+					final BufferedImage img;
+					BufferedImage img1;
 					if (hidden) {
-						img = CardImageCache.getCoverImage();
+						img1 = CardImageCache.getCoverImage();
 					} else {
-						img = CardImageCache.getImage(card);
+						img1 = CardImageCache.getImage(card);
 					}
-					final int p = ci.getPlayerPosition();
-					g.rotate(crossRotation, x, y);
-					g.drawImage(img, imgx + CROSS_OFFSET, imgy + CROSS_OFFSET, null);
+				
+					double crossRotation = Math.toRadians(rot);
+					int h = img1.getHeight();
+					int w = img1.getWidth();
+					double d = Math.sqrt(h * h + w * w);
+					//System.out.println("h=" + h + ",w=" + w + ",d=" + d);
+
+					BufferedImage img2;
+					{
+						AffineTransform t2 = new AffineTransform();
+						t2.translate(d - w, d - h);
+						AffineTransformOp op = new AffineTransformOp(t2, AffineTransformOp.TYPE_BICUBIC);
+						img2 = op.filter(img1, null);
+					}
+
+					BufferedImage img3;
+					{
+						AffineTransform t1 = new AffineTransform();
+						t1.rotate(crossRotation, d,d);
+						t1.translate(0,h/4);
+						AffineTransformOp op = new AffineTransformOp(t1, AffineTransformOp.TYPE_BICUBIC);
+						img3 = op.filter(img2, null);
+					}
+
+					g.drawImage(img3, (int)Math.round(getWidth()/2-d), (int)Math.round(getHeight()/2-d), null);
 				}
 			} // CROSS
 
@@ -225,7 +253,7 @@ public class JCardPanel extends JPanel {
 
 	public void clearCards() {
 		this.cards.clear();
-		this.crossRotation = Math.toRadians(50);
+		this.crossRotation = Math.toRadians(70);
 	}
 
 	public void addCard(CardInfo k) {
