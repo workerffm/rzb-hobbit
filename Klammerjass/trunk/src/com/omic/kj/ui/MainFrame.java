@@ -43,7 +43,7 @@ class MainFrame extends JFrame {
 		}
 		else {
 			setSize(900, 900);
-			setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
+			//setResizable(false); // Resizable möglich, aber nur quadratisch möglich !!!
 		}
 		
 //		gamedesk = new JGamePanel();

@@ -28,6 +28,7 @@ public class JGameInfoArea extends JComponent {
 	private GameInfo gameInfo;
 
 	public JGameInfoArea() {
+		setOpaque(false);
 		this.gameHistory = new ArrayList<>();
 		setPreferredSize(new Dimension(270, 160));
 		setMinimumSize(new Dimension(270, 160));
@@ -53,16 +54,16 @@ public class JGameInfoArea extends JComponent {
 	}
 
 	@Override
-	public void paint(Graphics g) {
-		super.paint(g);
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		paint2((Graphics2D) g);
 	}
 
 	public void paint2(Graphics2D g) {
 		final AffineTransform saveAT = g.getTransform();
 		int x, y, w, h;
-		x = getLocation().x;
-		y = getLocation().y + getHeight()-20;
+		x = 0;
+		y = getHeight()-20;
 		w = getWidth() - 8;
 		h = 30;
 

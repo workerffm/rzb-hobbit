@@ -34,7 +34,7 @@ public class JGamePanel extends JPanel {
 
 		this.backgroundImage = getImage("/images/table3.jpg");
 
-		final JPanel playerPanel = new JPanel(new BorderLayout());
+		final JPanel playerCommandPanel = new JPanel(new BorderLayout());
 		{
 			b1 = new JButton("Belle");
 			b3 = new JButton("Terz");
@@ -45,14 +45,14 @@ public class JGamePanel extends JPanel {
 			btnPanel.add(Theme.style4(b3));
 			btnPanel.add(Theme.style4(b2));
 			btnPanel.setOpaque(false);
-			playerPanel.add(btnPanel);
-			playerPanel.add(statusPanel, BorderLayout.SOUTH);
-			playerPanel.setOpaque(false);
+			playerCommandPanel.add(btnPanel);
+			playerCommandPanel.add(statusPanel, BorderLayout.SOUTH);
+			playerCommandPanel.setOpaque(false);
 		}
 
 		setLayout(new BorderLayout());
 		add(cardDesk, BorderLayout.CENTER);
-		add(playerPanel, BorderLayout.SOUTH);
+		add(playerCommandPanel, BorderLayout.SOUTH);
 		setOpaque(false);
 	}
 
@@ -80,6 +80,7 @@ public class JGamePanel extends JPanel {
 
 	public void setCards(int deskPlaceId, List<CardInfo> cards) {
 		cardDesk.setCards(deskPlaceId, cards);
+		repaint();
 	}
 
 	public void setOriginalPosition(int position) {
